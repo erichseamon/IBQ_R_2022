@@ -1,0 +1,219 @@
+#BRFSS_result_2019.R
+#
+#Author: Erich Seamon, University of Idaho
+#
+#Description: calls the BRFSS_ipfp to construct weights for a unique health district,
+#and then loops over all the health districts, and performs integerization and expansion.
+
+#The final step takes the expanded data, and totals up the binary positive values, and
+#compares that to the total population for that county.
+
+#Given the chained nature of the two functions - a person can run this script, feed it
+#a survey year and a variable, and get IPF results.  
+
+#Requirements:  The ACS population data must be structured in advance and available in the
+#./data folder of the repo, as well as the BRFSS survey data for that year.
+
+
+BRFSS_result_dynamic_base <- function(state, BRFSS_variable, BRFSS_year) {
+  #setwd("/mnt/ceph/erichs/git/sironos-dashboard-dev1/")
+  basedir <<- getwd()
+  state <<- state
+  BRFSS_variable <<- BRFSS_variable
+  BRFSS_year <<- BRFSS_year
+  
+  usePackage <- function(p) {
+    if (!is.element(p, installed.packages()[,1]))
+      install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org", lib="/mnt/ceph/erichs/R/x86_64-pc-linux-gnu-library/4.0")
+    require(p, character.only = TRUE)
+  }
+  
+  usePackage("latticeExtra")
+  usePackage("Rmisc")
+  
+  temp <<- "./results"
+  temp2 <<- "./validation"
+  # 
+  #source("./functions/BRFSS_decrypt.R")
+  # 
+  #BRFSS_decrypt(BRFSS_year)
+  
+  source("./functions/BRFSS_ipfp_dynamic_base.R")
+  
+  constraints <- read.csv(paste("./data/", state, "/", state, "_constraints_", BRFSS_year, ".csv", sep=""))
+  fips <- read.csv(paste("./data/", state, "/", state, "_fips.csv", sep=""))
+  #constraints <- constraints[,3:ncol(constraints)-1]
+  #convert constraints to numeric
+  constraints <- constraints[-c(1:2)]
+  constraints <- apply(constraints, 2, as.numeric) # convert to numeric data
+  rownames(constraints) <- fips$GEOID
+  #write out total population for percentage calc.  Can be adjusted based on groupings
+  idaho_totalpop <- as.data.frame(rowSums(constraints[,1:15]))
+  idaho_totalpop$GEOID <- rownames(idaho_totalpop)
+  colnames(idaho_totalpop) <- c("totalpop", "GEOID")
+
+  
+  hd <- read.csv(paste("./data/", state, "/", state, "_healthdistricts.txt", sep=""))
+  idaho_totalpop <- merge(idaho_totalpop, hd, by="GEOID")
+  idaho_totalpop <- idaho_totalpop[,c(1,2,12)]
+  
+  HDlist <- unique(hd$HEALTHDIST)
+  #totalpop <- read.csv("./data/idaho_totalpop19.csv")
+  
+  if (BRFSS_variable == "Z_NUOBES") {
+    BR <- "obese"
+    
+  } else if (BRFSS_variable == "Z_OVRWT1") {
+    BR <- "overweight"
+    
+  } else if (BRFSS_variable == "Z_HEART") {
+    BR <- "heart_attack"
+    
+  } else if (BRFSS_variable == "Z_ANGINA") {
+    BR <- "heart_disease"
+    
+  } else if (BRFSS_variable == "Z_STROKE") {
+    BR <- "stroke"
+    
+  } else if (BRFSS_variable == "Z_ASTHM3") {
+    BR <- "asthma"
+    
+  } else if (BRFSS_variable == "Z_LORESP") {
+    BR <- "copd"
+    
+  } else if (BRFSS_variable == "Z_DXDEP") {
+    BR <- "depression"
+    
+  } else if (BRFSS_variable == "Z_KIDNEY") {
+    BR <- "kidney_disease"
+    
+  }else if (BRFSS_variable == "Z_DIABET") {
+    BR <- "diabetes"
+    
+  }else if (BRFSS_variable == "Z_SMOKER") {
+    BR <- "smoking"
+    
+  }else if (BRFSS_variable == "BPHIGH4") {
+    BR  <- "hypertension"
+    
+  }else if (BRFSS_variable == "HEARTDISEASE") {
+    BR <- "heart_disease_combined"
+    
+  }else if (BRFSS_variable == "risk") {
+    BR <- "COVID_RISK"
+    
+  }else if (BRFSS_variable == "risk3") {
+    BR <- "COVID_RISK3"
+  }
+  
+  for (i in HDlist) {
+    BRFSS_ipfp_dynamic_base(state, i, BRFSS_year, BRFSS_variable)
+  }
+  setwd(basedir)
+  setwd(temp)
+  mainDir <- paste("result_",  BRFSS_variable, sep="")
+  subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_dynamic_base", sep="")
+  dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+  dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+  setwd(paste(getwd(), "/", mainDir, "/", subDir, sep=""))
+  
+  #for (k in 1:100) {
+  result_final <- NULL
+  
+  if (BR == "hypertension") {
+  for(i in HDlist) {
+    result <- read.csv(paste("expansion_", BRFSS_variable, "_", BRFSS_year,  "_", i, ".csv", sep=""))
+    #result <- BRFSS_ipfp_static_base_bootstrap_2019(i, BRFSS_year, BRFSS_variable)
+    result_compiled <- result %>% dplyr::filter(!!as.symbol(BR) == 1) %>%
+      dplyr::group_by(zone) %>%
+      dplyr::summarise(no_rows = length(zone))
+    result_final <- rbind(result_final, result_compiled)
+  }
+    
+  } else {
+    for(i in HDlist) {
+      result <- read.csv(paste("expansion_", BRFSS_variable, "_", BRFSS_year,  "_", i, ".csv", sep=""))
+      #result <- BRFSS_ipfp_static_base_bootstrap_2019(i, BRFSS_year, BRFSS_variable)
+      result_compiled <- result %>% dplyr::filter(!!as.symbol(BR) == 2) %>%
+        dplyr::group_by(zone) %>%
+        dplyr::summarise(no_rows = length(zone))
+      result_final <- rbind(result_final, result_compiled)
+    }
+  }
+  
+  #add any counties where expansion resulted in no observations
+  idahofips <- as.data.frame(idaho_totalpop$GEOID)
+  colnames(idahofips) <- c("zone")
+  result_final <- merge(result_final, idahofips, by="zone", all.y = TRUE)
+  result_final$no_rows[is.na(result_final$no_rows)] <- 0
+  
+  #result_summary <- NULL
+  #for(i in HDlist) {
+  #  result <- BRFSS_ipfp_2019(i, ACS_year, BRFSS_year, BRFSS_variable)
+  #  result_summary <- rbind(result_summary, result)
+  #}
+  
+  #write.csv(result_summary, file = paste("./results/", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+  
+  colnames(result_final) <- c("GEOID", "VALUE")
+  #totalpop <- cbind(constraints_original$GEOID, constraints_original$TOTPOP_CY)
+  #colnames(totalpop) <- c("totalpop", "GEOID")
+  combined <- merge(result_final, idaho_totalpop, by=c("GEOID"))
+  
+  combined$pct <- combined$VALUE/combined$totalpop
+  
+  #generate CI
+  
+  
+  # Assume alpha=0.01
+  
+  alpha=0.01
+  
+  # Get the proportion
+  p_hat = combined$pct
+  
+  
+  # Calculate the critical z-score
+  z = qnorm(1-alpha/2)
+  
+  # county size
+  n <- combined$totalpop
+  
+  L <- matrix(0)
+  U <- matrix(0)
+  
+  for (i in 1:length(n)) {
+    
+    L[i] <- p_hat[i] - z*sqrt((p_hat[i]*(1-p_hat[i]))/n[i])
+    U[i] <- p_hat[i] + z*sqrt((p_hat[i]*(1-p_hat[i]))/n[i])
+    
+  }
+  
+  combined$CI_lower <- L
+  combined$CI_upper <- U
+  
+  
+  
+  
+  
+ 
+  write.csv(combined, file = paste("result_",  BRFSS_variable, "_", BRFSS_year, ".csv", sep=""), row.names=FALSE)
+  #return(combined)
+  #
+  # 
+  # setwd(paste(tempdir(), "/", BRFSS_variable, "_", BRFSS_year, "_dynamic_base/", sep=""))
+  # if (file.exists(paste("result_",  BRFSS_variable, "_", BRFSS_year, "_boot_final.csv", sep=""))) {
+  #   #Delete file if it exists
+  #   file.remove(paste("result_",  BRFSS_variable, "_", BRFSS_year, "_boot_final.csv", sep=""))
+  # }
+  # files  <- list.files(pattern = '^result')
+  # tables <- lapply(files, read.csv, header = TRUE)
+  # combined.df <- do.call(rbind , tables)
+  # combined.final <- group.CI(pct~GEOID,combined.df)
+  # write.csv(combined.final, file = paste("result_",  BRFSS_variable, "_", BRFSS_year, "_boot_final.csv", sep=""), row.names=FALSE)
+  # 
+# 
+# setwd(basedir)
+# file.remove(paste("./data/Idaho/brfss", BRFSS_year, ".sas7bdat", sep=""))
+
+}

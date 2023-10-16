@@ -1,0 +1,105 @@
+library(maps)
+library(ggplot2)
+
+us.map <-  map_data('state')
+
+# add PADD zones
+us.map$PADD[us.map$region %in% 
+              c("connecticut", "maine", "massachusetts", "new hampshire", "rhode island", "vermont", "new york", "new jersey")] <- "HHS Region 1 & 2"
+us.map$PADD[us.map$region %in% 
+              c("district of columbia", "pennsylvania", "west virginia","maryland", "delaware", "virginia")] <- "HHS Region 3"
+us.map$PADD[us.map$region %in% 
+              c("alabama", "florida", "georgia", "south carolina", "north carolina", "kentucky", "mississippi", "tennessee")] <- "HHS Region 4"
+us.map$PADD[us.map$region %in% 
+              c("ohio", "indiana", "illinois", "michigan", "wisconsin", "minnesota")] <- "HHS Region 5"
+us.map$PADD[us.map$region %in% 
+              c("texas", "louisiana", "arkansas", "new mexico", "oklahoma")] <- "HHS Region 6"
+us.map$PADD[us.map$region %in% 
+              c("iowa", "missouri", "nebraska", "kansas")] <- "HHS Region 7"
+us.map$PADD[us.map$region %in% 
+              c("montana", "wyoming", "utah", "colorado", "north dakota", "south dakota")] <- "HHS Region 8"
+us.map$PADD[us.map$region %in% 
+              c("california", "nevada", "arizona")] <- "HHS Region 9"
+us.map$PADD[us.map$region %in% 
+              c("idaho", "oregon", "washington")] <- "HHS Region 10"
+
+# subset the dataframe by padd zones and move lat/lon accordingly
+us.map$lat.transp[us.map$PADD == "HHS Region 1 & 2"] <- us.map$lat[us.map$PADD == "HHS Region 1 & 2"] + 2
+us.map$long.transp[us.map$PADD == "HHS Region 1 & 2"] <- us.map$long[us.map$PADD == "HHS Region 1 & 2"] +3
+
+us.map$lat.transp[us.map$PADD == "HHS Region 3"] <- us.map$lat[us.map$PADD == "HHS Region 3"] + .5
+us.map$long.transp[us.map$PADD == "HHS Region 3"] <- us.map$long[us.map$PADD == "HHS Region 3"] + .8
+
+us.map$lat.transp[us.map$PADD == "HHS Region 4"] <- us.map$lat[us.map$PADD == "HHS Region 4"] - 3
+us.map$long.transp[us.map$PADD == "HHS Region 4"] <- us.map$long[us.map$PADD == "HHS Region 4"] + 3
+
+us.map$lat.transp[us.map$PADD == "HHS Region 5"] <- us.map$lat[us.map$PADD == "HHS Region 5"] + 4
+us.map$long.transp[us.map$PADD == "HHS Region 5"] <- us.map$long[us.map$PADD == "HHS Region 5"] +2
+
+us.map$lat.transp[us.map$PADD == "HHS Region 6"] <- us.map$lat[us.map$PADD == "HHS Region 6"] - 2
+us.map$long.transp[us.map$PADD == "HHS Region 6"] <- us.map$long[us.map$PADD == "HHS Region 6"] 
+
+us.map$lat.transp[us.map$PADD == "HHS Region 7"] <- us.map$lat[us.map$PADD == "HHS Region 7"] 
+us.map$long.transp[us.map$PADD == "HHS Region 7"] <- us.map$long[us.map$PADD == "HHS Region 7"] + .6
+
+us.map$lat.transp[us.map$PADD == "HHS Region 8"] <- us.map$lat[us.map$PADD == "HHS Region 8"] + 4
+us.map$long.transp[us.map$PADD == "HHS Region 8"] <- us.map$long[us.map$PADD == "HHS Region 8"] -2
+
+us.map$lat.transp[us.map$PADD == "HHS Region 9"] <- us.map$lat[us.map$PADD == "HHS Region 9"] 
+us.map$long.transp[us.map$PADD == "HHS Region 9"] <- us.map$long[us.map$PADD == "HHS Region 9"] -5
+
+us.map$lat.transp[us.map$PADD == "HHS Region 10"] <- us.map$lat[us.map$PADD == "HHS Region 10"] +4
+us.map$long.transp[us.map$PADD == "HHS Region 10"] <- us.map$long[us.map$PADD == "HHS Region 10"] -6
+
+# add labels
+# counties <- aggregate(cbind(long.transp, lat.transp) ~ subregion, data=us.map, 
+#                       FUN=function(x)mean(range(x)))
+# counties$labels <- c("boundary", "bonner", "kootenai", "benewah", "shoshone",
+#                      "latah", "clearwater","nez perce", "lewis", "idaho", 
+#                      "adams", "washington", "payette", "gem", "canyon", "owyhee", 
+#                      "valley", "boise", "ada", "elmore", 
+#                      "blaine", "camas", "gooding", "lincoln", "jerome", "twin falls", "cassia", "minidoka",
+#                      "butte", "bingham", "power", "caribou", "bannock", "oneida", "franklin", "bear lake",
+#                      "lemhi", "custer", "clark", "freemont", "jefferson", "madison", "bonneville", "teton")
+# 
+names(us.map)[names(us.map) == 'PADD'] <- 'Legend'
+
+us.map$Legend <- factor(us.map$Legend, levels = c("HHS Region 1 & 2", "HHS Region 3", "HHS Region 4", "HHS Region 5", "HHS Region 6", "HHS Region 7", "HHS Region 8", "HHS Region 9", "HHS Region 10"))
+
+# plot and use padd zone as fill
+ggplot(us.map,  aes(x=long.transp, y=lat.transp), colour="white") + 
+  geom_polygon(aes(group = group, fill=Legend), color="black") +
+  theme(panel.background = element_blank(),  # remove background
+        panel.grid = element_blank(), 
+        axis.line = element_blank(), 
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank()) + coord_quickmap()
+
+#, legend.text = element_text(size=15), legend.title = element_text(size=20)
+#geom_text(data=counties, aes(long.transp, lat.transp, label=subregion), size=3) +
+
+##US MAP
+
+# library(ggplot2)
+# library(dplyr)
+# all_states <- map_data("state")  
+# p <- ggplot()
+# p <- p + geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour="black", fill="white" )
+# 
+# 
+# id <- filter(all_states, region == "idaho")
+# 
+# 
+# p + geom_polygon(data = id, aes(x=long, y=lat, group = group),fill="black") +
+#   theme(panel.background = element_blank(),  # remove background
+#         panel.grid = element_blank(), 
+#         axis.line = element_blank(), 
+#         axis.title = element_blank(),
+#         axis.ticks = element_blank(),
+#         axis.text = element_blank()) + coord_quickmap() 
+# 
+# 
+
+
+

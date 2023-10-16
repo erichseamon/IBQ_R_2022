@@ -1,0 +1,27 @@
+{
+    "id": "9AB2EBDB",
+    "path": "~/git/IBQ_R_2022/src/model.Rmd",
+    "project_path": "src/model.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": true,
+    "created": 1666377171699.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "91,7",
+        "scrollLine": "76",
+        "last_setup_crc32": "fad1675f232fedab"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1666377522,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1666378891625,
+    "read_only": false,
+    "read_only_alternatives": []
+}

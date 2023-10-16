@@ -1,0 +1,49 @@
+
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(data.table)
+library(caret)
+library(doParallel)
+library(plyr)
+library(mice)
+library(VIM)
+
+
+ibq <- read.csv("./data/IBQ-R VSF Preterm 91022.csv")
+ibq[ibq == -99999] <- NA
+#ibq[8:45] <- lapply(ibq[8:45], factor)  ## as.factor() could also be used
+
+ibq_mice <- md.pattern(ibq[8:45])
+#aggr_plot <- aggr(ibq[8:45], col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(ibq[8:45]), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
+
+tempData <- mice(ibq[8:45],m=5,maxit=5,meth='pmm',seed=500)
+ibq_impute <- complete(tempData,5)
+
+ibq_impute <- cbind(ibq[1:7], ibq_impute, ibq[46:48])
+
+
+#aggr_plot <- aggr(tempData$data, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(tempData$data), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
+
+#densityplot(tempData)
+
+ibq <- na.omit(ibq)
+ibq <- subset(ibq, infantgender != -99999)
+ibq <- subset(ibq, infantage_ibq != -99999)
+
+
+#EDA
+
+bwplot(researcher ~ sur, data = ibq_impute)
+bwplot(researcher ~ na, data = ibq_impute)
+bwplot(researcher ~ ec, data = ibq_impute)
+
+bwplot(infantrace ~ sur, data = ibq_impute)
+bwplot(infantrace ~ na, data = ibq_impute)
+bwplot(infantrace ~ ec, data = ibq_impute)
+
+bwplot(infantgender ~ sur, data = ibq_impute)
+bwplot(infantgender ~ na, data = ibq_impute)
+bwplot(infantgender ~ ec, data = ibq_impute)
+
+

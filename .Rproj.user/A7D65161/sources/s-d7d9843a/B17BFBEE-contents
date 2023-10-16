@@ -1,0 +1,252 @@
+#title: covid_map_counties.R
+#function which plots time series of county cases
+#using nytimes data source
+
+BRFSS_map_counties <-function(state, BRFSS_variable, BRFSS_year, model) {
+  
+  setwd(basedir)
+  
+  alldata1 <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_static_base/", "result_", BRFSS_variable, "_", BRFSS_year,  ".csv", sep=""))
+  alldata2 <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_static_grouped/", "result_", BRFSS_variable, "_", BRFSS_year,  ".csv", sep=""))
+  alldata3 <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_dynamic_base/", "result_", BRFSS_variable, "_", BRFSS_year,  ".csv", sep=""))
+  alldata4 <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_dynamic_grouped/", "result_", BRFSS_variable, "_", BRFSS_year,  ".csv", sep=""))
+  
+  alldata <- rbind(alldata1, alldata2, alldata3, alldata4)
+  alldata$pct <- round(alldata$pct, 2)
+  alldata <- alldata[order(alldata$pct), ]
+  
+  simpleCap <- function(x) {
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1,1)), substring(s, 2),
+          sep="", collapse=" ")
+  }
+
+  library(ggplot2)
+  library(scales)
+  library(reshape2)
+  library(maptools)
+  library(stringr)
+  library(RColorBrewer)
+  library(raster)
+  library(leaflet)
+
+  setwd(basedir)
+  setwd(temp)
+  mainDir <- paste("result_",  BRFSS_variable, sep="")
+  subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_", model, sep="")
+  dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+  dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+  setwd(paste(getwd(), "/", mainDir, "/", subDir, sep=""))
+  
+  
+  
+  BRFSS <- read.csv(paste("result_", BRFSS_variable, "_", BRFSS_year,  ".csv", sep=""))
+  BRFSS <- as.data.frame(BRFSS)
+  #colnames(BRFSS) <- c("fips", "pct_lower", "pct", "pct_upper")
+  colnames(BRFSS) <- c("fips", "VALUE", "totalpop", "healthdistrict", "pct", "CI_lower", "CI_upper")
+  BRFSS$pct <- as.numeric(as.character(BRFSS$pct))
+  BRFSS$pct <- round(BRFSS$pct, 3)
+  
+  options(warn=-1)
+  setwd(basedir)
+  states <- readShapePoly('./geodata/states_conus.shp',
+                          proj4string=CRS
+                          ("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  projection = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+  
+  #states <- subset(states, STATE_NAME != "Alaska")
+  #states <- subset(states, STATE_NAME != "Hawaii")
+  
+  states <- subset(states, STATE_NAME == state)
+  
+  
+  counties <- readShapePoly('./geodata/UScounties_conus.shp',
+                            proj4string=CRS
+                            ("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  projection = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+  
+  colnames(counties@data)[1] <- "county"
+  colnames(counties@data)[2] <- "state"
+  colnames(counties@data)[5] <- "fips"
+  
+  #counties <- subset(counties, state == state)
+  counties <- counties[counties$state == state,]
+
+  m <- merge(counties, BRFSS, by=c("fips"), all.x = TRUE)
+  
+  exte <- as.vector(extent(m))
+  
+  
+  #pal2 <- colorNumeric(brewer.pal(9, "OrRd"), na.color = "#ffffff",
+   #                    domain = c(.1,.2,.3,.4,.5,.6,.7,.8,.9,1))
+  
+  
+  
+  
+  if (model == "static_base") {
+    domain <- alldata1$pct
+  } else if (model == "static_grouped") {
+    domain <- alldata2$pct
+  } else if (model == "dynamic_base") {
+    domain <- alldata3$pct
+  } else
+    domain <- alldata4$pct
+  
+
+  pal <- brewer.pal(9, "OrRd")
+  
+  #jpeg(filename = paste(dt, ".jpeg", sep=""),width=7,height=5)
+  #spplot(m, "cases", col.regions = brewer.pal(9, "Blues"), col = "gray",
+
+  m$pct <- round(m$pct, 3)
+  
+  m$pct2 <- m$pct *100
+  m$pct2 <- as.character(m$pct2)
+  m$pct2 <- paste(m$pct2, "%", sep="")
+  
+  m$pct[is.na(m$pct)] = 0
+  m2 <- m[order(m$pct), ]
+  
+  pal2 <- colorNumeric(brewer.pal(9, "Blues"), na.color = "#ffffff",
+                       domain = m2$pct)
+  
+  
+  
+  if (model == "static_base") {
+    MD <- "Static Base"
+  } else if (model == "static_grouped") {
+    MD <- "Static Grouped"
+  } else if (model == "dynamic_base") {
+    MD <- "Dynamic Base"    
+  } else
+    MD <- "Dynamic Grouped"
+  
+  
+  
+  if (BRFSS_variable == "Z_NUOBES") {
+    BR <- "obese"
+    
+  } else if (BRFSS_variable == "Z_OVRWT1") {
+    BR <- "overweight"
+    
+  } else if (BRFSS_variable == "Z_HEART") {
+    BR <- "heart_attack"
+    
+  } else if (BRFSS_variable == "Z_ANGINA") {
+    BR <- "heart_disease"
+    
+  } else if (BRFSS_variable == "Z_STROKE") {
+    BR <- "stroke"
+    
+  } else if (BRFSS_variable == "Z_ASTHM3") {
+    BR <- "asthma"
+    
+  } else if (BRFSS_variable == "Z_LORESP") {
+    BR <- "copd"
+    
+  } else if (BRFSS_variable == "Z_DXDEP") {
+    BR <- "depression"
+    
+  } else if (BRFSS_variable == "Z_KIDNEY") {
+    BR <- "kidney_disease"
+    
+  }else if (BRFSS_variable == "Z_DIABET") {
+    BR <- "diabetes"
+    
+  }else if (BRFSS_variable == "Z_SMOKER") {
+    BR <- "smoking"
+    
+  }else if (BRFSS_variable == "BPHIGH4") {
+    BR <- "hypertension"
+    
+  }else if (BRFSS_variable == "HEARTDISEASE") {
+    BR <- "heart_disease_combined"
+    
+  }else if (BRFSS_variable == "risk") {
+    BR <- "COVID Risk"
+    
+  }else if (BRFSS_variable == "risk3") {
+    BR <- "COVID Composite Risk"
+  }
+  
+  
+  
+  
+  
+  rc1 <- colorRampPalette(colors = c("red", "blue"))(nrow(m)) 
+  
+  
+  if (BRFSS_variable == "Z_NUOBES") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .40, .05))]
+    
+  } else if (BRFSS_variable == "Z_OVRWT1") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .80, .05))]
+    
+  } else if (BRFSS_variable == "Z_DIABET") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  } else if (BRFSS_variable == "Z_HEART") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  } else if (BRFSS_variable == "Z_ANGINA") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .05, .05))]
+    
+  } else if (BRFSS_variable == "Z_STROKE") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  } else if (BRFSS_variable == "Z_ASTHM3") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  } else if (BRFSS_variable == "Z_LORESP") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  } else if (BRFSS_variable == "Z_DXDEP") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  } else if (BRFSS_variable == "Z_KIDNEY") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  }else if (BRFSS_variable == "Z_SMOKER") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  }else if (BRFSS_variable == "BPHIGH4") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  }else if (BRFSS_variable == "HEARTDISEASE") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .20, .05))]
+    
+  }else if (BRFSS_variable == "risk") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .50, .05))]
+    
+  }else if (BRFSS_variable == "risk3") {
+    mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .15, .03))]
+  }
+  
+  
+  
+  
+  
+  
+  #mycolourscheme <- rc1[findInterval(alldata$pct, vec = seq(0, .40, .05))]
+  
+  spplot(m2, zcol = "pct", col.regions = pal2(m2$pct), axis.pos = 1, main = paste(state, " ", BR, "\n", " Model: ", MD, sep=""))
+    # 
+    # leaflet(data = m) %>% addProviderTiles("Stamen.TonerLite") %>% 
+    #   fitBounds(exte[1], exte[3], exte[2], exte[4]) %>% 
+    #   addPolylines(data = counties, col = ("black"), weight = 1) %>% 
+    #   addPolygons(data=m, weight = 0, fillColor = pal2(m$pct), popup=~paste(county, "\n", as.character(pct2), sep=""), fillOpacity = .5) %>%
+    #   addLabelOnlyMarkers(lng = coordinates(m)[,1], lat = coordinates(m)[,2],  
+    #                     labelOptions = labelOptions(noHide = T, direction = 'right', textOnly = T, textsize = "15px",
+    #                                                 style = list(
+    #                                                   "font-style" = "bold"
+    #                                                 )                    
+    #                                                 )) %>%
+    #   addLegend("topright", pal = pal2, values = m$pct,
+    #             title = BR,
+    #             labFormat = labelFormat(prefix = ""),
+    #             opacity = 1)
+    
+    #label =  ~as.character(pct2),
+    
+}   
+  

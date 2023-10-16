@@ -1,0 +1,99 @@
+#BRFSS_meta.R
+#BRFSS 2020 run - for the following variables
+#Obesity - Z_NUOBES
+#Diabetes - Z_DIABET
+#Overweight - Z_OVRWT1
+#Heart Disease - CVDCRHD4
+#COPD - CHCCOPD2
+#Asthma - ASTHNOW
+#Stroke - CVDSTRK3
+#Depression - ADDEPEV3
+#Kidney Disease - CHCKDNY2
+#Hypertension from 2019 - BPHIGH4 
+#Heart disease combined - combines Z_ANGINA and Z_HEART
+#risk - percentage of 1 out of 5 conditions (HD, hypertension, obesity, kidney disease, pulmonary disease)
+#risk3 - percentage of someone having all three conditions (heart disease, obesity, hypertension)
+
+BRFSS_meta <- function(BRFSS_year) {
+  basedir_meta <<- getwd()
+  source("./functions/BRFSS_decrypt.R")
+  source("./functions/BRFSS_dataread.R")
+  source("./functions/BRFSS_result_static_base.R")
+  source("./functions/BRFSS_result_dynamic_base.R")
+  source("./functions/BRFSS_result_static_grouped.R")
+  source("./functions/BRFSS_result_dynamic_grouped.R")
+  
+  
+  BRFSS_decrypt(BRFSS_year)
+
+  
+#BRFSS_list <- c("Z_NUOBES","Z_OVRWT1","Z_HEART","Z_ANGINA","Z_STROKE","Z_ASTHM3","Z_LORESP","Z_DXDEP","Z_KIDNEY","Z_DIABET", "Z_SMOKER", "HEARTDISEASE")
+#BRFSS_list <- c("HEARTDISEASE")
+BRFSS_list <- c("risk3")
+
+for (i in BRFSS_list) {
+  setwd(basedir_meta)
+  BRFSS_result_static_base("Idaho", i, BRFSS_year)
+  setwd(basedir_meta)
+  BRFSS_result_static_grouped("Idaho", i, BRFSS_year)
+  setwd(basedir_meta)
+  BRFSS_result_dynamic_base("Idaho", i, BRFSS_year)
+  setwd(basedir_meta)
+  BRFSS_result_dynamic_grouped("Idaho", i, BRFSS_year)
+  
+}
+
+#---
+
+setwd(basedir)
+file.remove(paste("./data/Idaho/brfss", BRFSS_year, ".sas7bdat", sep=""))
+
+
+
+library(jsonlite)
+
+#BRFSS_list <- c("Z_NUOBES","Z_OVRWT1","Z_HEART","Z_ANGINA","Z_STROKE","Z_ASTHM3","Z_LORESP","Z_DXDEP","Z_KIDNEY","Z_DIABET", "Z_SMOKER","BPHIGH4", "HEARTDISEASE")
+#BRFSS_list <- c("HEARTDISEASE")
+BRFSS_list <- c("risk3")
+
+
+for (i in BRFSS_list) {
+  if(i == "BPHIGH4") {
+    files <- list.files(paste("/mnt/ceph/erichs/git/haclab-brfss-covid/results/result_", i, "/", i, "_19_dynamic_base/", sep=""), pattern="result*", full.names=TRUE, recursive=FALSE)
+    file.copy(from = file.path(files), to = file.path("/mnt/ceph/erichs/git/haclab-brfss-covid/json/"))
+  } else {
+  files <- list.files(paste("/mnt/ceph/erichs/git/haclab-brfss-covid/results/result_", i, "/", i, "_20_dynamic_base/", sep=""), pattern="result*", full.names=TRUE, recursive=FALSE)
+  file.copy(from = file.path(files), to = file.path("/mnt/ceph/erichs/git/haclab-brfss-covid/json/"))
+  }}
+
+for (i in BRFSS_list){
+  
+  if (i == "BPHIGH4") {
+ datafile <- read.csv(paste("/mnt/ceph/erichs/git/haclab-brfss-covid/json/result_", i, "_19.csv", sep=""))
+ validationfiles <- list.files(paste("/mnt/ceph/erichs/git/haclab-brfss-covid/validation/validation_", i, "_19_dynamic_base/", sep=""), pattern="*.csv", full.names=TRUE, recursive=FALSE)
+ validationfiles <- lapply(validationfiles, read.csv, header = TRUE)
+ validationlist <- do.call(rbind, validationfiles)
+ datafile$REVec <- 1-validationlist$REVec
+ write.csv(datafile, file = paste("/mnt/ceph/erichs/git/haclab-brfss-covid/json/result_", i, "_19.csv", sep=""), row.names = FALSE)
+  } else {
+ datafile <- read.csv(paste("/mnt/ceph/erichs/git/haclab-brfss-covid/json/result_", i, "_20.csv", sep=""))
+ validationfiles <- list.files(paste("/mnt/ceph/erichs/git/haclab-brfss-covid/validation/validation_", i, "_20_dynamic_base/", sep=""), pattern="*.csv", full.names=TRUE, recursive=FALSE)
+ validationfiles <- lapply(validationfiles, read.csv, header = TRUE)
+ validationlist <- do.call(rbind, validationfiles)
+ datafile$REVec <- 1-validationlist$REVec
+ write.csv(datafile, file = paste("/mnt/ceph/erichs/git/haclab-brfss-covid/json/result_", i, "_20.csv", sep=""), row.names = FALSE)
+ 
+  }
+}
+
+setwd("/mnt/ceph/erichs/git/haclab-brfss-covid/json")
+temp = list.files(pattern="*.csv")
+
+for (i in 1:14){
+  x <- read.csv(temp[i])
+  x <- toJSON(x)
+  name <- gsub('.{7}$', '', temp[i])
+  write(x, file=paste(name, ".JSON", sep=""))
+}
+
+}

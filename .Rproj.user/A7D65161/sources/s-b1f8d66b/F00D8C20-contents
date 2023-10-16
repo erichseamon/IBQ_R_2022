@@ -1,0 +1,427 @@
+# state = 'Idaho'
+# Healthdistrict = 102
+# #BRFSS_variable =  "Z_DIABET"
+# BRFSS_variable = "Z_OVRWT1"
+# BRFSS_year = 20
+
+BRFSS_ipfp_dynamic_base <- function(state, Healthdistrict, BRFSS_year, BRFSS_variable) {
+  setwd(basedir)
+  source('./functions/BRFSS_significance_dynamic_base.R')
+  
+  usePackage <- function(p) {
+    if (!is.element(p, installed.packages()[,1]))
+      install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org", lib="/mnt/ceph/erichs/R/x86_64-pc-linux-gnu-library/4.0")
+    require(p, character.only = TRUE)
+  }
+  
+  usePackage("ipfp")
+  usePackage("dplyr")
+  usePackage("tidyr")
+  usePackage("stringr")
+  
+  ###START get county FIPS from specific health district
+  
+  hd <- read.csv(paste("./data/", state, "/", state, "_healthdistricts.txt", sep=""))  
+  hd <- hd[hd$HEALTHDIST %in% Healthdistrict,]
+  hd_counties <- hd$GEOID  
+  
+  ###END get county FIPS from specific health district
+  
+  ###START ACS constraints
+  
+  constraints <- read.csv(paste("./data/", state, "/", state, "_constraints_", BRFSS_year, ".csv", sep=""))
+  
+  # adding a fix to both original and test
+  constraints$X <- NULL
+  
+  fips <- read.csv(paste("./data/", state, "/", state, "_fips.csv", sep=""))
+  
+  rownames(constraints) <- fips$GEOID
+  
+  #reduce constraints to only health district counties
+  
+  constraints <- constraints[rownames(constraints) %in% hd_counties,]
+  
+  #merge black/asian/indian into nonwhite
+  
+  if (BRFSS_year == 20) {
+  constraints <- constraints %>% 
+    dplyr::mutate(NONWHITE = BLACK + ASIAN + INDIAN + HISPANIC) %>% 
+    dplyr::select(-c(BLACK, ASIAN, INDIAN, HISPANIC,OTHER))
+  } else  {
+    constraints <- constraints %>% 
+      dplyr::mutate(NONWHITE = BLACK + ASIAN + INDIAN + HISPANIC) %>% 
+      dplyr::select(-c(BLACK, ASIAN, INDIAN, HISPANIC))
+  }
+  
+  # Combine 18-20 and 20-25 into a 18-25 category - this is done across all variables, for all methods 
+  # (so not based on significance testing).
+  
+  constraints <- constraints %>% 
+    dplyr::mutate(POP18_CY = POP18_CY + POP20_CY) %>% 
+    dplyr::select(-POP20_CY)
+  
+  # Rename education columns
+  
+  constraints <- constraints %>% 
+    dplyr::rename("NOHS" = no_highschool, "HS" = highschool, "SC" = somecollege, "C" = college)
+  
+  # Run the significance fn
+  
+  nuobes_sig <- BRFSS_significance_dynamic_base(BRFSS_variable = BRFSS_variable, 
+                                                BRFSS_year = BRFSS_year)
+  
+  
+  colnames(constraints)
+  nonsig <- nuobes_sig$nonsignificant_vars
+  
+  # Exclude race/sex categories based on significance function
+  
+  # Note this is just checking for string 'MALE' since this covers both FEMALE and MALE levels
+  if (any(str_detect(nonsig$term, 'MALE'))){
+    constraints <- constraints %>% 
+      dplyr::select(!contains('MALE'))
+  }
+  # Note this is just checking for string 'WHITE' since this covers both NONWHITE and WHITE levels
+  if (any(str_detect(nonsig$term, 'WHITE'))){
+    constraints <- constraints %>% 
+      dplyr::select(!contains('WHITE'))
+  }
+  
+  # Combine categories based on significance function
+  
+  # combine age categories
+  
+  if (any(str_detect(nonsig$term, 'age_cat'))){
+    insig_age_levels <- c(nonsig$term[str_detect(nonsig$term, 'age_cat')], nuobes_sig$ref$age_cat_ref) %>% 
+      str_remove('age_cat')
+    constraints = constraints %>% 
+      dplyr::mutate(INSIG_AGE = rowSums(constraints[insig_age_levels])) %>% 
+      dplyr::select(-all_of(insig_age_levels))
+    names(constraints$INSIG_AGE) <- NULL 
+  }
+  
+  # combine education categories
+  
+  if (any(str_detect(nonsig$term, 'education'))){
+    insig_ed_levels <- c(nonsig$term[str_detect(nonsig$term, 'education')], nuobes_sig$ref$education_ref) %>% 
+      str_remove('education')
+    constraints = constraints %>% 
+      dplyr::mutate(INSIG_ED = rowSums(constraints[insig_ed_levels])) %>% 
+      dplyr::select(-all_of(insig_ed_levels))
+    names(constraints$INSIG_ED) <- NULL 
+  }
+  
+  column_order <- c( "POP18_CY", "POP25_CY", "POP30_CY", "POP35_CY", "POP40_CY", "POP45_CY", "POP50_CY", "POP55_CY", "POP60_CY", "POP65_CY", "POP70_CY", "POP75_CY", "POP80_CY", "POP85_CY", "INSIG_AGE", "FEMALES_CY", "MALES_CY", "WHITE", "NONWHITE", "NOHS",  "HS", "SC", "C", "INSIG_ED")
+  
+  constraints <- constraints %>% 
+    dplyr::select(intersect(column_order, colnames(constraints)))
+  
+  rownames(constraints) <- as.character(rownames(constraints))
+  
+  if (BRFSS_variable == "Z_NUOBES") {
+    BRFSS_variable2 <- "obese"
+    
+  } else if (BRFSS_variable == "Z_OVRWT1") {
+    BRFSS_variable2 <- "overweight"
+    
+  } else if (BRFSS_variable == "Z_HEART") {
+    BRFSS_variable2 <- "heart_attack"
+    
+  } else if (BRFSS_variable == "Z_ANGINA") {
+    BRFSS_variable2 <- "heart_disease"
+    
+  } else if (BRFSS_variable == "Z_STROKE") {
+    BRFSS_variable2 <- "stroke"
+    
+  } else if (BRFSS_variable == "Z_ASTHM3") {
+    BRFSS_variable2 <- "asthma"
+    
+  } else if (BRFSS_variable == "Z_LORESP") {
+    BRFSS_variable2 <- "copd"
+    
+  } else if (BRFSS_variable == "Z_DXDEP") {
+    BRFSS_variable2 <- "depression"
+    
+  } else if (BRFSS_variable == "Z_KIDNEY") {
+    BRFSS_variable2 <- "kidney_disease"
+    
+  }else if (BRFSS_variable == "Z_DIABET") {
+    BRFSS_variable2 <- "diabetes"
+    
+  }else if (BRFSS_variable == "Z_SMOKER") {
+    BRFSS_variable2 <- "smoking"
+    
+  }else if (BRFSS_variable == "BPHIGH4") {
+    BRFSS_variable2 <- "hypertension"
+    
+  }else if (BRFSS_variable == "HEARTDISEASE") {
+    BRFSS_variable2 <- "heart_disease_combined"
+    
+  }else if (BRFSS_variable == "risk") {
+    BRFSS_variable2 <- "COVID_RISK"
+    
+  }else if (BRFSS_variable == "risk3") {
+    BRFSS_variable2 <- "COVID_RISK3"
+  }
+  
+  ind <- BRFSS_dataread(BRFSS_year)
+  
+ # if (BRFSS_variable == "HEARTDISEASE") {
+    angina <- ind$Z_ANGINA
+    heart <- ind$Z_HEART
+    hd <- as.data.frame(cbind(angina, heart)) 
+    hd$heartdisease <- hd[1] + hd[2]
+    hd$heartdisease[hd$heartdisease == 2] <- 1
+    hd$heartdisease[hd$heartdisease > 2] <- 2
+    ind$HEARTDISEASE <- hd$heartdisease
+ # }
+  
+  #risk prevalence variable added
+  ind$risk <- ifelse(Reduce(`|`, lapply(ind[c("HEARTDISEASE", "Z_DIABET", "Z_KIDNEY", "Z_LORESP", "Z_NUOBES")], `==`, "2")), "2", "1")
+  ind$risk[is.na(ind$risk),] <- 1
+  ind$risk <- as.numeric(ind$risk)
+  ###END constraints construction
+  
+  #creates new variable "risk3" which is a 2 if all three are true, if not all three are true, its false
+  ind$risk3<-ind$HEARTDISEASE==2 & ind$Z_NUOBES==2 & ind$Z_LORESP==2
+  
+  ###START Load BRFSS Survey information
+  
+  #ind <- haven::read_sas(paste("./data/", state, "/brfss", BRFSS_year, "p.sas7bdat", sep=""))
+  #ind <- read.csv(paste("./data/", state, "/Idaho_BRFSS_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+  ind <- cbind(ind$AGE, ind$IMPRACE, ind$EDUCA, ind$SEXVAR, eval(parse(text=paste("ind$", BRFSS_variable, sep=""))), ind$DISTRICT)
+  colnames(ind) <- c("age", "race", "education", "sex", BRFSS_variable2, "healthdistrict")
+
+  #convert to dataframe
+  ind <- as.data.frame(ind)
+
+  #add to address Hypertension values that are not 1,2,3, or 4
+  if (BRFSS_variable == "BPHIGH4") {
+    ind$hypertension[ind$hypertension == 2] <- 1
+    ind$hypertension[ind$hypertension == 3] <- 2
+    ind$hypertension[ind$hypertension == 4] <- 1
+  }
+  
+  #remove 7 and 9 for target variable
+  ind <- ind[ind[5] != 7 & ind[5] != 9, ]  
+
+
+  #fix education levels
+  ind$education[ind$education<4]<-3
+  ind$education <- ind$education -2
+  ind <- ind[ind$education != 7 & ind$education != 9 & ind$education !=0, ]  
+  
+  #ind <- subset(ind, education != 7 & education !=9 & education !=0)
+  
+  #fix healthdistricts to have 100 numeric value
+  ind$healthdistrict <- ind$healthdistrict + 100
+  
+  #subset ind by healthdistrict
+  ind <- ind[ind$healthdistrict %in% Healthdistrict,]
+  
+  #remove ages lower than 17
+  ind <- ind[ind$age > 17,]
+  
+  #remove other race category
+  ind <- ind[ind$race != 6,]
+  ind <- na.omit(ind)
+  
+  #remove age (age_cat already in place)
+  #ind <- ind[,-1]
+  
+  ind$race <- ifelse(ind$race > 1, 2, 1)
+  ind$race <- as.factor(ind$race)
+  ind$sex <- as.factor(ind$sex)
+  ind$age <- as.numeric(ind$age)
+  ind$education <- as.numeric(ind$education)
+  
+  ind <- ind %>% 
+    dplyr::mutate(race = factor(race, labels = c("WHITE", "NONWHITE")),
+           sex = factor(sex, labels =  c("FEMALES_CY", "MALES_CY")))
+  
+  #library(plyr)
+  
+  # Create age_cat
+  ind <- ind %>%
+    dplyr::mutate(age_cat = cut(age, breaks = c(17,24,29,34,39,44,49,54,59,64,69,74,79,84,100)),
+           age_cat = factor(age_cat, labels = c("POP18_CY",  "POP25_CY",  "POP30_CY",  "POP35_CY",  "POP40_CY",  "POP45_CY",  "POP50_CY", "POP55_CY",  "POP60_CY",  "POP65_CY", "POP70_CY",  "POP75_CY",  "POP80_CY",  "POP85_CY"))
+    )
+  
+  # Combine age cat
+  if (any(str_detect(nonsig$term, 'age_cat'))){
+    new_levels <- levels(ind$age_cat)
+    new_levels2 <- levels(ind$age_cat)
+    new_levels[new_levels %in% insig_age_levels] <- 'INSIG_AGE'
+    if (length(unique(new_levels)) == 1 ){
+      ind[ , -which(names(ind) %in% c("age_cat"))]
+      constraints[ , -which(names(constraints) %in% c("INSIG_AGE"))]
+      } else
+    levels(ind$age_cat) <- new_levels
+  }
+  
+  # combine education categories
+  ind$edu_cat <- factor(ind$education)
+  levels(ind$edu_cat) <- c('NOHS', 'HS', 'SC', 'C')
+  
+  if (any(str_detect(nonsig$term, 'education'))){
+    new_levels <- levels(ind$edu_cat)
+    new_levels2 <- levels(ind$edu_cat)
+    new_levels[new_levels %in% insig_ed_levels] <- 'INSIG_ED'
+    if (length(unique(new_levels)) == 1 ){
+      ind <- ind[ , -which(names(ind) %in% c("edu_cat"))]
+      constraints <- constraints[ , -which(names(constraints) %in% c("INSIG_ED"))]
+    } else
+      levels(ind$edu_cat) <- new_levels
+  }
+  
+  #Flatten ind to align dimensions with constraints
+  # 
+  #   indlevels <- unique(ind$education)
+  #   #deal with no education 1 except 103
+  #   
+  #   if ('1' %in% indlevels) {
+  #   } else {
+  #     constraints <- constraints %>% select(-NOHS)  
+  #   }
+  
+  # Exclude race/sex categories based on significance function
+  
+  covariates_to_include <- c('age_cat', 'sex', 'race', 'edu_cat')
+  
+  
+  if ('age_cat' %in% colnames(ind)==FALSE){
+    covariates_to_include <- covariates_to_include[covariates_to_include != 'age_cat']
+  }
+  
+  if ('edu_cat' %in% colnames(ind)==FALSE){
+    covariates_to_include <- covariates_to_include[covariates_to_include != 'edu_cat']
+  }
+  
+  # Note this is just checking for string 'MALE' since this covers both FEMALE and MALE levels
+  if (any(str_detect(nonsig$term, 'MALE'))){
+    covariates_to_include <- covariates_to_include[covariates_to_include != 'sex']
+  }
+  
+  # Note this is just checking for string 'WHITE' since this covers both NONWHITE and WHITE levels
+  if (any(str_detect(nonsig$term, 'WHITE'))){
+    covariates_to_include <- covariates_to_include[covariates_to_include != 'race']
+  }
+  
+  A <- lapply(covariates_to_include, function(x) model.matrix(~ind[[x]]-1))
+  A <- do.call(cbind, A)
+  
+  ##END
+  
+  ###START align column names between ind and constraints
+  colnames(A) <-   str_remove(colnames(A), 'ind\\[\\[x]]') # rename aggregate variables
+  A <- A[,colnames(constraints)]  # re-order columns to match constraints
+  At <- t(A)
+  x0 <- rep(1,nrow(A))
+  
+  
+  ##END
+  
+  ##START Calculate Weights
+  
+  weights <- apply(constraints, MARGIN=1, FUN = function(x) ipfp(as.numeric(x), At, x0))
+  BRFSS_tae <- function(observed, simulated){
+    obs_vec <- as.numeric(observed)
+    sim_vec <- as.numeric(simulated)
+    sum(abs(obs_vec - sim_vec))
+  }
+  
+  TAEVec <- rep(0, nrow(constraints))
+  REVec <- rep(0, nrow(constraints))
+  
+  # calculate the correlation for each zone
+  for (i in 1:nrow(constraints)){
+    TAEVec[i] <- BRFSS_tae (constraints[i,], colSums(A))
+    REVec[i] <- TAEVec[i] / sum(constraints[i,])
+  }
+  
+  REVec <- cbind(data.frame(rownames(constraints)), data.frame(REVec))
+  colnames(REVec) <- c("FIPS", "REVec")
+  
+  
+  setwd(basedir)
+  setwd(temp2)
+  mainDir <- paste("validation_",  BRFSS_variable, "_", BRFSS_year,  "_dynamic_base", sep="")
+  #subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_static_grouped", sep="")
+  dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+  #dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+  setwd(paste(getwd(), "/", mainDir, sep=""))
+  
+  
+  write.csv(data.frame(REVec), file = paste(BRFSS_variable, "_", "dynamic_base", "_", Healthdistrict, "_revec.csv", sep=""))
+  # 
+  #TAEVec <- rep(0, nrow(constraints))
+  #REVec <- rep(0, nrow(constraints))
+  
+  # calculate the correlation for each zone
+  #for (i in 1:nrow(constraints)){
+  #  TAEVec[i] <- BRFSS_tae (constraints[i,], colSums(A))
+  #  REVec[i] <- TAEVec[i] / sum(constraints[i,])
+  #}
+  
+  ##END Calculate Weights
+  
+  ##Integerisation and Expansion function using TRS
+  
+  int_trs <- function(x){
+    # For generalisation purpose, x becomes a vector
+    xv <- as.vector(x) # allows trs to work on matrices
+    xint <- floor(xv) # integer part of the weight
+    r <- xv - xint # decimal part of the weight
+    def <- round(sum(r)) # the deficit population
+    # the weights be 'topped up' (+ 1 applied)
+    topup <- sample(length(x), size = def, prob = r)
+    xint[topup] <- xint[topup] + 1
+    dim(xint) <- dim(x)
+    dimnames(xint) <- dimnames(x)
+    xint
+  }
+  
+  
+  int_expand_vector <- function(x){
+    index <- 1:length(x)
+    rep(index, round(x))
+  }
+  
+  result <- NULL
+  set.seed(42)
+  for(i in 1:nrow(constraints)){
+    # Integerise and expand
+    zonenames <- rownames(constraints)
+    zone <- zonenames[i]
+    ints <- int_expand_vector(int_trs(weights[, i]))
+    # Take the right individuals
+    data_frame <- data.frame(ind[ints,])
+    data_frame$zone <- zone
+    result <- rbind(result, data_frame)
+    
+  }
+  
+  # if("edu_cat" %in% colnames(result)) {
+  #   result <- result[-3]
+  #   result$education <- result$edu_cat
+  #   result <- result[-7]
+  #   
+  # }else {}
+  # 
+  
+  setwd(basedir)
+  setwd(temp)
+  
+  mainDir <- paste("result_",  BRFSS_variable, sep="")
+  subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_dynamic_base", sep="")
+  dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+  dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+  setwd(paste(getwd(), "/", mainDir, "/", subDir, sep=""))
+  
+  
+  write.csv(weights, file = paste("weights_", BRFSS_variable, "_", BRFSS_year, "_", Healthdistrict, ".csv", sep=""), row.names=FALSE)
+  write.csv(result, file = paste("expansion_", BRFSS_variable, "_", BRFSS_year, "_", Healthdistrict, ".csv", sep=""), row.names=FALSE)
+  
+  return(list('weights' = weights, 'ind' = ind, 'constraints' = constraints, 'variable' = BRFSS_variable, 'HealthDistrict' = Healthdistrict, 'result' = result, 'REVec' = REVec))
+}  

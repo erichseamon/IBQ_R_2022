@@ -1,0 +1,27 @@
+{
+    "id": "291547F6",
+    "path": "~/git/haclab-brfss-covid/Supplemental_Appendix_refined.Rmd",
+    "project_path": null,
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": true,
+    "created": 1668540586056.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "2126,0",
+        "scrollLine": "2136",
+        "last_setup_crc32": "98897ccb665efe7b"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1668552961,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1668553101944,
+    "read_only": false,
+    "read_only_alternatives": []
+}

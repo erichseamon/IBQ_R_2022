@@ -1,0 +1,27 @@
+{
+    "id": "2738101C",
+    "path": "~/git/IBQ_R_2022/src/model_imputed_revised.Rmd",
+    "project_path": "src/model_imputed_revised.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1695314850085.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "547,0",
+        "scrollLine": "546",
+        "last_setup_crc32": "c368a7f1443ee63"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1695326934,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1695326934111,
+    "read_only": false,
+    "read_only_alternatives": []
+}

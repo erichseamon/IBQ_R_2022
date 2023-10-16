@@ -1,0 +1,26 @@
+{
+    "id": "13EE0FAE",
+    "path": "~/git/haclab-brfss-covid/functions/BRFSS_significance_dynamic_base.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "2397825966",
+    "contents": "",
+    "dirty": false,
+    "created": 1668022263023.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "89,2",
+        "scrollLine": "86"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1668026086,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1668026086437,
+    "read_only": false,
+    "read_only_alternatives": []
+}

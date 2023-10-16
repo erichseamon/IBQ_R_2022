@@ -1,0 +1,188 @@
+BRFSS_results_plotting <- function(state, BRFSS_year, BRFSS_variable, model) {
+
+setwd(basedir)
+temp <- "./results"
+library(ggplot2)
+library(gridExtra)
+library(maps)
+  
+data(county.fips)
+# 
+# combined <- read.csv(paste("./results_final/", BRFSS_variable, "_", BRFSS_year, "_static_grouped/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+# combined$year <- paste("20", BRFSS_year, sep="")
+# combined$model <- 1
+
+combined2 <- read.csv(paste(temp, "/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_", model, "/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+
+#combined2$year <- paste("20", BRFSS_year, sep="")
+#combined2$model <- 2
+
+#combined2 <- read.csv(paste("./results_final/", BRFSS_variable, "_", BRFSS_year2, "_static_grouped/result_", BRFSS_variable, "_", BRFSS_year2, ".csv", sep=""))
+#combined1$year <- paste("20", BRFSS_year2, sep="")
+
+#combined2015 <- read.csv(paste("./archived_data/brfss_results_2015_", BRFSS_variable, ".csv", sep=""))
+
+fips <- read.csv(paste("./data/", state, "/", state, "_fips.csv", sep=""))
+countynames <- subset(county.fips, fips > 15999 & fips < 17000)
+
+#combined2015$VALUE <- as.numeric(combined2015$VALUE)
+#combined2015$GEOID <- fips$GEOID
+
+#combined <- rbind(combined2, combined)
+#combined$year <- as.factor(combined$year)
+colnames(countynames) <- c("GEOID", "COUNTIES")
+
+m <- merge(combined2, countynames, by="GEOID", all.y=TRUE)
+m[is.na(m)] <- 0
+
+combined2 <- m
+
+#combined2$COUNTIES <- countynames$polyname
+combined2$COUNTIES <- sapply(strsplit(combined2$COUNTIES, split=',', fixed=TRUE), function(x) (x[2]))
+
+combined2$pct <- as.numeric(as.character(combined2$pct))
+combined2$pct <- round(combined2$pct, 3)
+
+combined2$CI_upper <- as.numeric(as.character(combined2$CI_upper))
+combined2$CI_upper <- round(combined2$CI_upper, 3)
+
+
+combined2$CI_lower <- as.numeric(as.character(combined2$CI_lower))
+combined2$CI_lower <- round(combined2$CI_lower, 3)
+
+#p1 <- ggplot(combined, aes(x=COUNTIES, y=VALUE, fill=year)) +
+#  geom_bar(stat="identity", position="dodge") +
+#  theme(axis.text.x = element_text(angle = 90))
+
+
+if (BRFSS_variable == "Z_NUOBES") {
+  BR <- "obese"
+  
+} else if (BRFSS_variable == "Z_OVRWT1") {
+  BR <- "overweight"
+  
+} else if (BRFSS_variable == "Z_HEART") {
+  BR <- "heart_attack"
+  
+} else if (BRFSS_variable == "Z_ANGINA") {
+  BR <- "heart_disease"
+  
+} else if (BRFSS_variable == "Z_STROKE") {
+  BR <- "stroke"
+  
+} else if (BRFSS_variable == "Z_ASTHM3") {
+  BR <- "asthma"
+  
+} else if (BRFSS_variable == "Z_LORESP") {
+  BR <- "copd"
+  
+} else if (BRFSS_variable == "Z_DXDEP") {
+  BR <- "depression"
+  
+} else if (BRFSS_variable == "Z_KIDNEY") {
+  BR <- "kidney_disease"
+  
+}else if (BRFSS_variable == "Z_DIABET") {
+  BR <- "diabetes"
+  
+}else if (BRFSS_variable == "Z_SMOKER") {
+  BR <- "smoking"
+  
+}else if (BRFSS_variable == "BPHIGH4") {
+  BR <- "hypertension"
+  
+}else if (BRFSS_variable == "HEARTDISEASE") {
+  BR <- "heart_disease_combined"
+  
+}else if (BRFSS_variable == "risk") {
+  BR <- "COVID Risk"
+
+}else if (BRFSS_variable == "risk3") {
+  BR <- "COVID Composite Risk"
+}
+
+#names(combined2)[names(combined2) == 'pct'] <- paste(BR, ' Percentage', sep="")
+#names(combined2)[names(combined2) == 'COUNTIES'] <- 'Counties'
+
+ggplot(combined2, aes(x=COUNTIES, y=pct, group = 1)) +
+  geom_line() + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90), text = element_text(size = 14)) + geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper), alpha = 0.3) + 
+  labs(x = "Counties") + labs(title = paste(BR, " percentage per county", sep=""))+
+  theme(plot.title = element_text(lineheight = 0.9))  + theme(axis.title.y=element_blank()) 
+
+#p2 <- ggplot(combined, aes(x=COUNTIES, y=pct, fill=year)) +
+#  geom_line(stat="identity", position="dodge") +
+#  theme(axis.text.x = element_text(angle = 90))
+
+#p2 <- ggplot(combined, aes(x=COUNTIES, y=pct, colour=year, group = year)) +
+#  geom_line() +
+#  theme(axis.text.x = element_text(angle = 90))
+
+#plot(p1)
+#grid.arrange(p1, p2, nrow = 2)
+
+
+}
+# 
+# BRFSS_map_plotting <- function(BRFSS_year, BRFSS_variable) {
+#   
+#   
+#   library(ggplot2)
+#   library(gridExtra)
+#   library(maps)
+#   
+#   data(county.fips)
+#   
+#   combined <- read.csv(paste("./results_final/", BRFSS_variable, "_", BRFSS_year, "_static_grouped/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+#   combined$year <- paste("20", BRFSS_year, sep="")
+#   
+#   #combined2 <- read.csv(paste("./results/", BRFSS_variable, "_", BRFSS_year2, "/result_", BRFSS_variable, "_", BRFSS_year2, ".csv", sep=""))
+#   #combined1$year <- paste("20", BRFSS_year2, sep="")
+#   
+#   combined2015 <- read.csv(paste("/archived_data/brfss_results_2015_", BRFSS_variable, ".csv", sep=""))
+#   
+#   fips <- read.csv("./metadata/idaho_fips.csv")
+#   countynames <- subset(county.fips, fips > 15999 & fips < 17000)
+#   
+#   combined2015$VALUE <- as.numeric(combined2015$VALUE)
+#   combined2015$GEOID <- fips$GEOID
+#   
+#   #combined <- rbind(combined2015, combined)
+#   combined$year <- as.factor(combined$year)
+#   combined$COUNTIES <- countynames$polyname
+#   colnames(combined) <- c("fips", "VALUE", "totalpop", "pct", "year", "COUNTIES")
+#   
+#   
+#   #p1 <- ggplot(combined, aes(x=COUNTIES, y=VALUE, fill=year)) +
+#   #  geom_bar(stat="identity", position="dodge") +
+#   #  theme(axis.text.x = element_text(angle = 90))
+#   
+#   
+#   temp <- tempfile()
+#   download.file("https://nextcloud.sesync.org/index.php/s/SDJ5P4R6DDmt4FF/download",temp)
+#   outDir<-"/tmp/seamon_covid/counties_conus/"
+#   unzip(temp,exdir=outDir)
+#   
+#   setwd("/tmp/seamon_covid/counties_conus")
+#   
+#   counties <- readShapePoly('/tmp/seamon_covid/counties_conus/UScounties_conus.shp',
+#                             proj4string=CRS
+#                             ("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+#   projection = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+#   
+#   colnames(counties@data)[1] <- "county"
+#   colnames(counties@data)[2] <- "state"
+#   colnames(counties@data)[5] <- "fips"
+#   
+#   counties <- subset(counties, state == "Idaho")
+#   
+#   combined2 <- merge(counties, combined, by=("fips"))
+#   
+#   ggplot(combined2, aes(x = long, y = lat, group = pct)) + 
+#     geom_polygon(colour='black', fill='white')
+#   
+  
+  
+  
+  
+#}

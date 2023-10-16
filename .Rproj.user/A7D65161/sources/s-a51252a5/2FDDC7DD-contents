@@ -1,0 +1,182 @@
+# BRFSS_variable <- 'Z_NUOBES'
+# BRFSS_year <- 19
+# sas7bdat_filepath <- '../BRFSSPaper/data/Idaho/brfss19.sas7bdat'
+# setwd('~/git_repos/BRFSSPaper/')
+
+BRFSS_significance_dynamic_grouped <- function(BRFSS_variable, BRFSS_year){
+
+  usePackage <- function(p) {
+    if (!is.element(p, installed.packages()[,1]))
+      install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org", lib="/mnt/ceph/erichs/R/x86_64-pc-linux-gnu-library/4.0")
+    require(p, character.only = TRUE)
+  }
+  #library(caret)
+  #library(ResourceSelection)
+  #library(MASS)
+  #library(ROCR)
+  #library(gridExtra)
+  usePackage("broom")
+  usePackage("dplyr")
+    #set variable name for column name
+    
+  
+  if (BRFSS_variable == "Z_NUOBES") {
+    BRFSS_variable2 <- "obese"
+    
+  } else if (BRFSS_variable == "Z_OVRWT1") {
+    BRFSS_variable2 <- "overweight"
+    
+  } else if (BRFSS_variable == "Z_HEART") {
+    BRFSS_variable2 <- "heart_attack"
+    
+  } else if (BRFSS_variable == "Z_ANGINA") {
+    BRFSS_variable2 <- "heart_disease"
+    
+  } else if (BRFSS_variable == "Z_STROKE") {
+    BRFSS_variable2 <- "stroke"
+    
+  } else if (BRFSS_variable == "Z_ASTHM3") {
+    BRFSS_variable2 <- "asthma"
+    
+  } else if (BRFSS_variable == "Z_LORESP") {
+    BRFSS_variable2 <- "copd"
+    
+  } else if (BRFSS_variable == "Z_DXDEP") {
+    BRFSS_variable2 <- "depression"
+    
+  } else if (BRFSS_variable == "Z_KIDNEY") {
+    BRFSS_variable2 <- "kidney_disease"
+    
+  }else if (BRFSS_variable == "Z_DIABET") {
+    BRFSS_variable2 <- "diabetes"
+    
+  }else if (BRFSS_variable == "Z_SMOKER") {
+    BRFSS_variable2 <- "smoking"
+    
+  }else if (BRFSS_variable == "BPHIGH4") {
+    BRFSS_variable2 <- "hypertension"
+    
+  }else if (BRFSS_variable == "HEARTDISEASE") {
+    BRFSS_variable2 <- "heart_disease_combined"
+    
+  }else if (BRFSS_variable == "risk") {
+    BRFSS_variable2 <- "COVID_RISK"
+    
+  }else if (BRFSS_variable == "risk3") {
+    BRFSS_variable2 <- "COVID_RISK3"
+  }
+    
+    ## SWITCHING THIS TO READ FROM ANY FILEPATH, SO THAT I CAN SWITCH BETWEEN YEARS WITHOUT CHANGING FILE STRUCTURE
+    #ind <- haven::read_sas(paste("./data/Idaho/brfss", BRFSS_year, ".sas7bdat", sep=""))
+    #ind <- haven::read_sas(sas7bdat_filepath)
+    ind <- BRFSS_dataread(BRFSS_year)
+    
+   # if (BRFSS_variable == "HEARTDISEASE") {
+      angina <- ind$Z_ANGINA
+      heart <- ind$Z_HEART
+      hd <- as.data.frame(cbind(angina, heart)) 
+      hd$heartdisease <- hd[1] + hd[2]
+      hd$heartdisease[hd$heartdisease == 2] <- 1
+      hd$heartdisease[hd$heartdisease > 2] <- 2
+      ind$HEARTDISEASE <- hd$heartdisease
+   # }
+    
+    #risk prevalence variable added
+    ind$risk <- ifelse(Reduce(`|`, lapply(ind[c("HEARTDISEASE", "Z_DIABET", "Z_KIDNEY", "Z_LORESP", "Z_NUOBES")], `==`, "2")), "2", "1")
+    ind$risk[is.na(ind$risk),] <- 1 
+    ind$risk <- as.numeric(ind$risk)
+  
+    #creates new variable "risk3" which is a 2 if all three are true, if not all three are true, its false
+    ind$risk3<-ind$HEARTDISEASE==2 & ind$Z_NUOBES==2 & ind$Z_LORESP==2
+    
+    # Note this is different processing code than original analysis - I've checked equivalence.
+    #Reduce BRFSS Survey information to only constraint variables, as well as health district
+    ind <- ind %>% 
+      dplyr::select('age' = AGE,
+             'sex' = SEXVAR,
+             'race' = IMPRACE,  # NOTE: THIS IS PULLED OUT BY INDEX NUMBER IN ORIG - DOES THIS VARIABLE NAME VARY?
+             'education' = EDUCA,
+             'variable' = BRFSS_variable,
+             'healthdistrict' = DISTRICT) %>% 
+      as.data.frame() %>% 
+      subset(sex < 3) %>% 
+      filter(age != 7 & age != 9 & age > 19) %>% 
+      filter (education != 7 & education != 9) %>% 
+      filter(race != 6) %>% 
+      mutate(education = ifelse(education < 4, 3, education) - 2,
+             healthdistrict =  healthdistrict + 100,
+             sex = as.factor(sex),
+             race = ifelse(race > 1, 2, race),
+             age_breaks = cut(age, breaks = c(17,24,44,64,100)),
+             age_cat = factor(age_breaks, labels = c("POP18_24_CY",  "POP25_44_CY",  "POP45_64_CY",  "POP65UP_CY"))) %>% 
+    mutate(race = factor(race, labels = c("WHITE", "NONWHITE")),
+           education = factor(education, labels = c("NOHS", "HS", "SC", "C")),
+           sex = factor(sex, labels =  c("FEMALES_CY", "MALES_CY"))
+    ) %>% 
+      na.omit() %>% 
+      dplyr::select(-age, -age_breaks)
+    rownames(ind) <- NULL
+    attr(ind, 'na.action') <- NULL
+
+    ind_agg <- ind
+    
+    #add to address Hypertension values that are not 1,2,3, or 4
+    if (BRFSS_variable == "BPHIGH4") {
+      ind_agg$variable[ind_agg$variable == 2] <- 1
+      ind_agg$variable[ind_agg$variable == 3] <- 2
+      ind_agg$variable[ind_agg$variable == 4] <- 1
+      ind_agg <- ind_agg[ind_agg$variable != 7,]
+      ind_agg <- ind_agg[ind_agg$variable != 9,]
+    }
+  
+    
+    # Note this is different processing code than original analysis - I've checked equivalence though.
+ 
+    # get overall counts of observations in each age/variable group, counts of observations where variable == 2,
+    # proportion of each age group where variable == 2, and pull out the age category corresponding to  
+    # the minimum ratio as a character
+    GetMinRatio <- function(dat, covariate, input_variable) {
+      covariate <- enquo(covariate)
+      input_variable = enquo(input_variable)
+      minratio <- dat %>%
+        group_by(!!covariate) %>%
+        dplyr::mutate(overall_count = n())  %>%
+        filter(!!input_variable == 2) %>%
+        group_by(!!covariate, overall_count) %>%
+        dplyr::summarise(group2_count = sum(!!input_variable == 2), .groups = 'keep') %>%
+        mutate(ratio = group2_count/overall_count) %>%
+        ungroup() %>%
+        filter(ratio == min(ratio)) %>%
+        pull(!!covariate)
+      return(as.character(minratio))
+    }
+
+    # relevel covariates so that the category with the minimum ratio of the variable of interest is the base category
+    ind_agg <- ind_agg %>% 
+      mutate(age_cat = relevel(age_cat, GetMinRatio(ind_agg, age_cat, variable)),
+             race = relevel(race, GetMinRatio(ind_agg, race, variable)),
+             sex = relevel(sex, GetMinRatio(ind_agg, sex, variable)),
+             education = relevel(education, GetMinRatio(ind_agg, education, variable)))
+
+    ind_agg$variable <- ind_agg$variable - 1
+    
+    
+    age_cat_ref <- levels(ind_agg$age_cat)[1]
+    age_cat_ref <- paste("age_cat", age_cat_ref, sep="")
+    education_ref  <- levels(ind_agg$education)[1]
+    education_ref <- paste("education", education_ref, sep="")
+    race_ref <- levels(ind_agg$race)[1]
+    race_ref <- paste("race", race_ref, sep="")
+    sex_ref <- levels(ind_agg$sex)[1]
+    sex_ref <- paste("sex", sex_ref, sep="")
+    ref <- data.frame(age_cat_ref, education_ref, race_ref, sex_ref, stringsAsFactors = F)
+    
+    metadata <- data.frame(BRFSS_variable, BRFSS_year)
+    
+    fit_all <- glm(unlist(variable) ~ age_cat + race + education + sex, data=ind_agg, family="binomial")
+    fit2_all <- tidy(fit_all)
+    fit2_all[fit2_all$p.value < .1,]
+    fit_sig_all <- fit2_all[fit2_all$p.value < .10,]
+    fit_nonsig_all <- fit2_all[fit2_all$p.value > .10,]
+    return(list('Meta' = metadata, 'ref' = ref, 'significant_vars' = fit_sig_all, 'nonsignificant_vars' = fit_nonsig_all))
+}

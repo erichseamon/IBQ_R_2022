@@ -1,0 +1,13 @@
+BRFSS_dataread <- function(BRFSS_year) {
+  if (BRFSS_year == 19) {
+  ind <- haven::read_sas(paste("./data/", state, "/brfss", BRFSS_year, ".sas7bdat", sep=""))
+  } else if (BRFSS_year == 20) {
+    
+  ind <- haven::read_sas(paste("./data/", state, "/brfss", BRFSS_year, ".sas7bdat", sep=""))
+  }
+  
+  names(ind) <-gsub("^\\_","",names(ind))
+  
+  return(ind)
+  
+}

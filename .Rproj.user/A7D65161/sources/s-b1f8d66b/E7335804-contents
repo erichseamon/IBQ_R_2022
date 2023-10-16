@@ -1,0 +1,467 @@
+#BRFSS_ipfp_2019.R
+#
+#Author: Erich Seamon, University of Idaho
+#
+#Description: this function generates weights for a specific Idaho public health district
+#based on BRFSS survey information for a specific year.  Two datasets must exist with the
+#./data folder: a BRFSS sas survey file (e.g. brfss18.sas7bdat), and a constraints file, which
+#consists of county-level ACS data (e.g. idaho_constraints18.csv)
+#
+#Inputs are: the health district (ex. 101) and the year (two digit ending number).
+#the output creates a <weights> data frame with individual survey respondent weights, for each
+#of the counties within the health district.
+#
+#This function uses the <ipfp> library.
+
+
+BRFSS_ipfp_static_base <- function(state, Healthdistrict, BRFSS_year, BRFSS_variable) {
+setwd(basedir)
+  usePackage <- function(p) {
+    if (!is.element(p, installed.packages()[,1]))
+      install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org", lib="/mnt/ceph/erichs/R/x86_64-pc-linux-gnu-library/4.0")
+    require(p, character.only = TRUE)
+  }
+  
+  usePackage("cmm")
+  usePackage("ipfp")
+  usePackage("haven")
+  usePackage("purrr")
+  usePackage("mipfp")
+  usePackage("dplyr")
+  usePackage("lme4")
+
+###START get county FIPS from specific health district
+  
+  hd <- read.csv(paste("./data/", state, "/", state, "_healthdistricts.txt", sep=""))  
+  
+  hd <- hd[hd$HEALTHDIST %in% Healthdistrict,]
+  
+  hd_counties <- hd$GEOID  
+  
+  ###END get county FIPS from specific health district
+  
+  ###START ACS constraints
+  
+  
+  constraints <- read.csv(paste("./data/", state, "/", state, "_constraints_", BRFSS_year, ".csv", sep=""), header=TRUE)
+#   ##education constraint
+#   ed <- read.csv(paste("./data/", state, "/", state, "_constraints_education", BRFSS_year, ".csv", sep=""))
+#   
+#   ##income constraint
+#   #income <- read.csv(paste("./data/idaho_constraints_income", BRFSS_year, ".csv", sep=""))
+#   #income_combined <- cbind(rowSums(income[,4:7]), rowSums(income[,8:11]), rowSums(income[,12:15]), rowSums(income[,16:19]))
+#   
+#   constraints <- read.csv(paste("./data/", state, "/", state, "_constraints", BRFSS_year, ".csv", sep=""))
+#   
+# 
+# constraints <- cbind(constraints, ed[,4:7])
+constraints <- constraints[-1]
+#constraints_original <- constraints
+
+#constraints <- constraints[,6:ncol(constraints)-1]
+
+#convert constraints to numeric
+
+
+fips <- read.csv(paste("./data/", state, "/", state, "_fips.csv", sep=""))
+
+rownames(constraints) <- fips$GEOID
+# 
+# #reduce constraints to only health district counties
+# 
+constraints <- constraints[rownames(constraints) %in% hd_counties,]
+constraints_original <- constraints
+
+constraints <- apply(constraints, 2, as.numeric) # convert to numeric data
+rownames(constraints) <- constraints[,1]
+
+#merge black/asian/indian into nonwhite
+
+
+if (BRFSS_year == 19) {
+constraints <- as.data.frame(constraints)
+constraints$NONWHITE <- constraints$BLACK + constraints$ASIAN + constraints$INDIAN + constraints$HISPANIC
+constraints <- constraints[,-c(23, 25:27)]
+constraints <- as.data.frame(constraints)
+
+constraints <- constraints[,c(1:18,23:24,19:22)]
+} else {
+  
+  constraints <- as.data.frame(constraints)
+  constraints$NONWHITE <- constraints$BLACK + constraints$ASIAN + constraints$INDIAN + constraints$HISPANIC
+  constraints <- constraints[,-c(23, 25:28)]
+  constraints <- as.data.frame(constraints)
+  
+  constraints <- constraints[,c(1:18,23:24,19:22)]
+  
+}
+
+#merges ages based on known structure
+#constraints <- cbind(rowSums(constraints[,1:2]), rowSums(constraints[,3:6]), rowSums(constraints[,7:10]), rowSums(constraints[,11:15]), constraints[,20:23], constraints[,16:19]  )
+#colnames(constraints) <- c("POP18_CY", "POP25_CY", "POP45_CY", "POP65_CY","NOHS", "HS", "SC", "C", "FEMALES_CY", "MALES_CY", "WHITE", "NONWHITE" )
+
+
+#constraints <- cbind(rowSums(constraints[,1:2]), rowSums(constraints[,3:6]), rowSums(constraints[,7:10]), rowSums(constraints[,11:15]), constraints[,16:19], constraints[,20:23])
+#colnames(constraints) <- c("POP18_24_CY", "POP25_44_CY", "POP45_64_CY", "POP65UP_CY","FEMALES_CY", "MALES_CY", "WHITE", "NONWHITE", "NOHS", "HS", "SC", "C"  )
+
+constraints <- cbind(rowSums(constraints[,1:2]), constraints[,3:15], constraints[,16:19], constraints[,20:23])
+colnames(constraints) <- c("POP18_CY", "POP25_CY", "POP30_CY", "POP35_CY", "POP40_CY", "POP45_CY", "POP50_CY", "POP55_CY", "POP60_CY", "POP65_CY", "POP70_CY", "POP75_CY", "POP80_CY", "POP85_CY", "FEMALES_CY", "MALES_CY", "WHITE", "NONWHITE", "NOHS", "HS", "SC", "C")
+
+#merge 18-20 and 20-24
+#merge 74+
+
+#constraints$POP18_CY <- rowSums(constraints[,1:2])
+#constraints$POP75_UP_CY <- rowSums(constraints[,13:15])
+
+#constraints <- constraints[,c(1,3:12, 20, 16:19) ]
+
+###END constraints construction
+
+###START Load BRFSS Survey information
+
+
+#set variable name for column name
+if (BRFSS_variable == "Z_NUOBES") {
+  BRFSS_variable2 <- "obese"
+  
+} else if (BRFSS_variable == "Z_OVRWT1") {
+  BRFSS_variable2 <- "overweight"
+  
+} else if (BRFSS_variable == "Z_HEART") {
+  BRFSS_variable2 <- "heart_attack"
+  
+} else if (BRFSS_variable == "Z_ANGINA") {
+  BRFSS_variable2 <- "heart_disease"
+  
+} else if (BRFSS_variable == "Z_STROKE") {
+  BRFSS_variable2 <- "stroke"
+  
+} else if (BRFSS_variable == "Z_ASTHM3") {
+  BRFSS_variable2 <- "asthma"
+  
+} else if (BRFSS_variable == "Z_LORESP") {
+  BRFSS_variable2 <- "copd"
+  
+} else if (BRFSS_variable == "Z_DXDEP") {
+  BRFSS_variable2 <- "depression"
+  
+} else if (BRFSS_variable == "Z_KIDNEY") {
+  BRFSS_variable2 <- "kidney_disease"
+  
+}else if (BRFSS_variable == "Z_DIABET") {
+  BRFSS_variable2 <- "diabetes"
+  
+}else if (BRFSS_variable == "Z_SMOKER") {
+  BRFSS_variable2 <- "smoking"
+  
+}else if (BRFSS_variable == "BPHIGH4") {
+  BRFSS_variable2 <- "hypertension"
+  
+}else if (BRFSS_variable == "HEARTDISEASE") {
+  BRFSS_variable2 <- "heart_disease_combined"
+  
+}else if (BRFSS_variable == "risk") {
+  BRFSS_variable2 <- "COVID_RISK"
+  
+}else if (BRFSS_variable == "risk3") {
+  BRFSS_variable2 <- "COVID_RISK3"
+}
+
+ind <- BRFSS_dataread(BRFSS_year)
+#ind <- haven::read_sas(paste("./data/", state, "/brfss", BRFSS_year, "p.sas7bdat", sep=""))
+#ind <- read.csv(paste("./data/", state, "/Idaho_BRFSS_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+# ind_refined <- ind[,c("_GEOSTR", "CVDCRHD4", "CVDSTRK3", "ASTHNOW", "CHCCOPD2", "ADDEPEV3", "CHCKDNY2", "DIABETE4", "PREDIAB1", "SMOKDAY2", "ECIGNOW")]
+# colnames(ind_refined) <- c("healthdistrict", "heart_disease", "stroke", "asthma", "copd", "depressive_disorder", "kidney_disease", "diabetes", "pre_diabetes", "cigarette_use", "vaping", "flu_vaccine")
+# ind <- ind_refined
+
+
+#bootstrap
+#ind_original <- read.csv("./data/ind_meta.csv")
+# 
+# for (k in 1:bootnumber) {
+#   
+#   #bootstrap
+#   ind_x <- readRDS(paste("./data/ind_meta/ind_meta_boot_ind_", k, ".rds", sep=""))
+#   #ind_x <- subset(ind_original, boot == paste("ind_", k, sep=""))
+#   #ind_x <- ind_x[-1]
+#   ind_boot <- ind_x[1,]$boot
+#   ind_x <- ind_x[-9]
+#   ind <- ind_x
+
+#if (BRFSS_variable == "HEARTDISEASE") {
+  angina <- ind$Z_ANGINA
+  heart <- ind$Z_HEART
+  hd <- as.data.frame(cbind(angina, heart)) 
+  hd$heartdisease <- hd[1] + hd[2]
+  hd$heartdisease[hd$heartdisease == 2] <- 1
+  hd$heartdisease[hd$heartdisease > 2] <- 2
+  ind$HEARTDISEASE <- hd$heartdisease
+#}
+
+#risk prevalence variable added
+ind$risk <- ifelse(Reduce(`|`, lapply(ind[c("HEARTDISEASE", "Z_DIABET", "Z_KIDNEY", "Z_LORESP", "Z_NUOBES")], `==`, "2")), "2", "1")
+ind$risk[is.na(ind$risk),] <- 1
+ind$risk <- as.numeric(ind$risk)
+
+#creates new variable "risk3" which is a 2 if all three are true, if not all three are true, its false
+ind$risk3<-ind$HEARTDISEASE==2 & ind$Z_NUOBES==2 & ind$hypertension==2
+#Reduce BRFSS Survey information to only constraint variables, as well as health district
+
+#-remove ind mod
+#
+ind <- cbind(ind$AGE, ind$IMPRACE, ind$EDUCA, ind$SEXVAR, eval(parse(text=paste("ind$", BRFSS_variable, sep=""))), ind$DISTRICT)
+colnames(ind) <- c("age", "race", "education", "sex", BRFSS_variable2, "healthdistrict")
+
+ind <- as.data.frame(ind)
+
+#add to address Hypertension values that are not 1,2,3, or 4
+if (BRFSS_variable == "BPHIGH4") {
+  ind$hypertension[ind$hypertension == 2] <- 1
+  ind$hypertension[ind$hypertension == 3] <- 2
+  ind$hypertension[ind$hypertension == 4] <- 1
+}
+
+
+#remove 7 and 9 for target variable
+ind <- ind[ind[5] != 7 & ind[5] != 9, ] 
+
+ind$education[ind$education<4]<-3
+ind$education <- ind$education -2
+ind <- ind[ind$education != 7 & ind$education != 9 & ind$education !=0, ]  
+# 
+
+ind$healthdistrict <- ind$healthdistrict + 100
+# 
+# #remove 7 and 9 values from sex
+# 
+ind <- subset(ind, sex < 3)
+ind$sex <- as.factor(ind$sex)
+# 
+ind <- subset(ind, age != 7 & age != 9)
+# 
+#ind <- subset(ind, education != 7 & education !=9 & education !=0)
+# 
+ind$education <- as.factor(ind$education)
+
+#end ind mod
+
+#subset ind by healthdistrict
+
+ind <- ind[ind$healthdistrict %in% Healthdistrict,]
+ind <- na.omit(ind)
+ind <- ind[ind$age > 17,]
+
+
+#setup age categories in alignment with constraints ACS data
+
+ind$age_cat <- cut(ind$age, breaks = c(17,24,29,34,39,44,49,54,59,64,69,74,79,84,100))
+
+#remove other race category
+ind <- ind[ind$race != 6,]
+ind <- na.omit(ind)
+
+#remove age (age_cat already in place)
+ind <- ind[,-1]
+
+ind$race <- ifelse(ind$race > 1, 2, 1)
+ind$race <- as.factor(ind$race)
+ind$sex <- as.factor(ind$sex)
+#ind$education <- as.factor(ind$education)
+
+
+#REMOVE IMPUTE FOR EDUCATION ADDITION
+# 
+# #added for impute test
+# impute <- read.csv(paste("./data/impute/", BRFSS_variable, "_", BRFSS_year, "_impute.csv", sep=""))
+# impute <- impute[is.na(eval(parse(text=paste("impute$", BRFSS_variable2, sep="")))),]
+# impute <- impute[-1]
+# impute <- impute[,c(3,2,5,4,1)]
+# impute[,3] <- 1
+# impute <- impute[impute$healthdistrict == Healthdistrict,]
+# 
+# ind<- rbind(ind, impute)
+# ind$age_cat <- as.factor(ind$age_cat)
+
+#Flatten ind to align dimensions with constraints
+ind$education <- factor(ind$education)
+indlevels <- unique(ind$education)
+#deal with no education 1 except 103
+
+if ('1' %in% indlevels) {
+} else {
+  constraints <- constraints %>% select(-NOHS)  
+}
+
+A <- cbind(model.matrix(~ ind$age_cat - 1),
+           model.matrix(~ ind$education - 1), model.matrix(~ ind$sex - 1),
+           model.matrix(~ ind$race -1))
+
+#combine nonwhite individuals into one group
+
+#A <- as.data.frame(A)
+#A$race_nw  <- rowSums(A[,19:ncol(A)])
+#A <- as.matrix(A)
+#A <- cbind(A[,c(1:18, ncol(A))])
+
+##END
+
+###START align column names between ind and constraints
+
+colnames(A) <- colnames(constraints) # rename aggregate variables
+At <- t(A)
+x0 <- rep(1,nrow(A))
+
+
+##END
+
+##START Calculate Weights
+
+weights <- apply(constraints, MARGIN=1, FUN = function(x) ipfp(as.numeric(x), At, x0))
+#colnames(weights) <- constraints_original$FIPS
+
+#write the weights for counties within a specific health district
+# setwd(basedir)
+# setwd(temp)
+# mainDir <- paste("result_",  BRFSS_variable, sep="")
+# subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_static_base", sep="")
+# dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+# dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+# setwd(paste(getwd(), "/", mainDir, "/", subDir, sep=""))
+# 
+# write.csv(weights, file = paste("weights_", BRFSS_variable, "_", BRFSS_year, "_", Healthdistrict, ".csv", sep=""), row.names=FALSE)
+
+##END
+
+#Internal Model Validation using TAE/RE per health district, across included counties
+
+# 
+BRFSS_tae <- function(observed, simulated){
+  obs_vec <- as.numeric(observed)
+  sim_vec <- as.numeric(simulated)
+  sum(abs(obs_vec - sim_vec))
+}
+
+ 
+ TAEVec <- rep(0, nrow(constraints))
+ REVec <- rep(0, nrow(constraints))
+ 
+ # calculate the correlation for each zone
+ for (i in 1:nrow(constraints)){
+   TAEVec[i] <- BRFSS_tae (constraints[i,], colSums(A))
+   REVec[i] <- TAEVec[i] / sum(constraints[i,])
+ }
+ 
+
+ REVec <- cbind(data.frame(rownames(constraints)), data.frame(REVec))
+ colnames(REVec) <- c("FIPS", "REVec")
+ 
+ setwd(basedir)
+ setwd(temp2)
+ mainDir <- paste("validation_",  BRFSS_variable, "_", BRFSS_year,  "_static_base", sep="")
+ #subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_static_grouped", sep="")
+ dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+ #dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+ setwd(paste(getwd(), "/", mainDir, sep=""))
+ 
+ 
+ write.csv(data.frame(REVec), file = paste(BRFSS_variable, "_", "static_base", "_", Healthdistrict, "_revec.csv", sep=""))
+ 
+ 
+  BRFSS_tae <- function(observed, simulated){
+    obs_vec <- as.numeric(observed)
+    sim_vec <- as.numeric(simulated)
+    sum(abs(obs_vec - sim_vec))
+  }
+  
+  TAEVec <- rep(0, nrow(constraints))
+  REVec <- rep(0, nrow(constraints))
+  
+  # calculate the correlation for each zone
+  for (i in 1:nrow(constraints)){
+    TAEVec[i] <- BRFSS_tae (constraints[i,], colSums(A))
+    REVec[i] <- TAEVec[i] / sum(constraints[i,])
+  }
+  
+  REVec <- cbind(data.frame(rownames(constraints)), data.frame(REVec))
+  colnames(REVec) <- c("FIPS", "REVec")
+  
+  
+  setwd(basedir)
+  setwd(temp2)
+  mainDir <- paste("validation_",  BRFSS_variable, "_", BRFSS_year,  "_dynamic_base", sep="")
+  #subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_static_grouped", sep="")
+  dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+  #dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+  setwd(paste(getwd(), "/", mainDir, sep=""))
+  
+  
+  write.csv(data.frame(REVec), file = paste(BRFSS_variable, "_", "dynamic_base", "_", Healthdistrict, "_revec.csv", sep=""))
+
+#source("./src/BRFSS_tae.R")
+
+#TAEVec <- rep(0, nrow(constraints))
+#REVec <- rep(0, nrow(constraints))
+
+# calculate the correlation for each zone
+#for (i in 1:nrow(constraints)){
+#  TAEVec[i] <- BRFSS_tae (constraints[i,], colSums(A))
+#  REVec[i] <- TAEVec[i] / sum(constraints[i,])
+#}
+
+##END Calculate Weights
+
+##Integerisation and Expansion function using TRS
+
+int_trs <- function(x){
+  # For generalisation purpose, x becomes a vector
+  xv <- as.vector(x) # allows trs to work on matrices
+  xint <- floor(xv) # integer part of the weight
+  r <- xv - xint # decimal part of the weight
+  def <- round(sum(r)) # the deficit population
+  # the weights be 'topped up' (+ 1 applied)
+  topup <- sample(length(x), size = def, prob = r)
+  xint[topup] <- xint[topup] + 1
+  dim(xint) <- dim(x)
+  dimnames(xint) <- dimnames(x)
+  xint
+}
+
+
+int_expand_vector <- function(x){
+  index <- 1:length(x)
+  rep(index, round(x))
+}
+
+
+rownames(constraints) <- constraints_original$FIPS
+result <- NULL
+set.seed(42)
+for(i in 1:nrow(constraints)){
+  # Integerise and expand
+  zonenames <- rownames(constraints)
+  zone <- zonenames[i]
+  ints <- int_expand_vector(int_trs(weights[, i]))
+  # Take the right individuals
+  data_frame <- data.frame(ind[ints,])
+  data_frame$zone <- zone
+  result <- rbind(result, data_frame)
+  
+}
+
+setwd(basedir)
+setwd(temp)
+
+mainDir <- paste("result_",  BRFSS_variable, sep="")
+subDir <- paste(BRFSS_variable, "_", BRFSS_year, "_static_base", sep="")
+dir.create(paste(getwd(), "/", mainDir,  sep=""), showWarnings = FALSE)
+dir.create(paste(getwd(), "/", mainDir, "/", subDir, sep=""), showWarnings = FALSE)
+setwd(paste(getwd(), "/", mainDir, "/", subDir, sep=""))
+
+write.csv(weights, file = paste("weights_", BRFSS_variable, "_", BRFSS_year, "_", Healthdistrict, ".csv", sep=""), row.names=FALSE)
+write.csv(result, file = paste("expansion_", BRFSS_variable, "_", BRFSS_year, "_", Healthdistrict, ".csv", sep=""), row.names=FALSE)
+#return(result)
+
+}
+
+
+

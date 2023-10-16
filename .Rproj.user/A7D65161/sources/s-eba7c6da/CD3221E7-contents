@@ -1,0 +1,2205 @@
+---
+title: 'Supplemental Appendix Refined - Estimating COVID-19 Health Indicators Using Spatial
+  Microsimulation'
+fontsize: 12pt
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 2
+    fig_caption: no
+    number_sections: no
+    df_print: kable
+    includes:
+      in_header: header.tex
+  linestretch: 1.5
+  word_document:
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    
+    toc: yes
+    toc_depth: '2'
+    df_print: paged
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align="center", fig.width = 12, fig.height = 5.5, fig.cap = " ")
+knitr::opts_knit$set(root.dir = "/mnt/ceph/erichs/git/haclab-brfss-covid/")  # with something else than `getwd()`
+basedir <<- getwd()
+basedir2 <<- getwd()
+temp <<- "./results"
+
+```
+
+\newpage
+## Supplemental Appendix Overview
+
+This supplemental appendix provides data and code used to construct all models and figure outputs for the Idaho seven-region study area (Figure 1). 
+
+## Data Input
+
+Our data input involves four (4) sources:
+
+1. The Behavioral Risk Factors Surveillance System (BRFSS) survey, from 2020, for the state of Idaho.  Survey responses on obesity, overweight, and diabetes (n = 5474) were collected across the state of Idaho, at a regional, health district scale;
+2. American Community Survey (ACS) data for 2020.  The U.S. Census, in coordination with the American Community Survey, provide annual updates to population demographics.  In this instance, we utilized county-level demographics as constraining data for our microsimulation modeling;
+3. Center for Health Statistics, 2020. The CSA provided cross-tabulated census data, which allowed us to assess empty cell concerns; and
+4. Geographic data for state and county boundaries.
+
+\newpage
+
+## Model Developmennt
+
+Using the aforementioned datasets, we constructed four main iterative proportional fitting (IPF) models:
+
++ Model 1: Static base model. Maintains all census groupings, and does no filtering based on significance testing.
++ Model 2: Static grouped model. Performs no significance testing, but does an initial group combination.
++ Model 3: Dynamic base model. Performs a significance testing to remove variables - but does no grouping.
++ Model 4: Dynamic grouped model. Performs both significance testing and grouping.
+
+Each model was constructed and run for each variable (obesity, overweight, diabetes, kidney disease, depressive disorder, pulmonory disease, asthma, stroke, angina/heart disease, heart attack, and smoking) and each health district (n=7).
+
+\newpage
+
+## Figure S1. State of Idaho Study Area 
+
+<!-- ![Alt text](./figures/BRFSS_figure1.png){height=85%} -->
+<!-- <p style="text-align: center;">Figure 1. State of Idaho Study Area</p> -->
+
+```{r, echo=FALSE,fig.align="center", fig.cap = paste("State of Idaho study area.  Modified from the State of Idaho's Department of Health and Welfare (healthandwelfare.idaho.gov)")}
+library(png)
+library(cowplot)
+library(ggplot2)
+#plot(NA, xlim = c(1,7), ylim = c(2,4), type = "n", xaxt = "n", yaxt = "n", xlab = "", ylab = "", bty = "n")
+fig1 <- readPNG("./figures/BRFSS_figure1.png", native=TRUE)
+# 
+# rasterImage(readPNG(source="./figures/BRFSS_figure1.png"), 1, 2, 2.5, 4)
+
+photo_panel <- ggdraw() + draw_image("./figures/BRFSS_figure1.png") 
+photo_panel
+#knitr::include_graphics('./figures/BRFSS_figure1.png')
+```
+
+<!-- \center -->
+
+<!-- ![](./figures/BRFSS_figure1.png){#id .class width=70% height=70%}   -->
+<!-- [your image caption](./figures/BRFSS_figure1.png) -->
+
+<!-- \center -->
+
+
+## Figure S2. Small Area Estimation Methodology
+
+<!-- ![Alt text](./figures/BRFSS_figure2.png){height=85%} -->
+
+<!-- Figure 2. Small area estimation methodology. -->
+
+
+```{r, echo=FALSE, out.width="90%", fig.align="center", fig.cap = paste("Modeling methodology")}
+#knitr::include_graphics('./figures/BRFSS_figure2.png')
+
+library(png)
+library(cowplot)
+library(ggplot2)
+#plot(NA, xlim = c(1,7), ylim = c(2,4), type = "n", xaxt = "n", yaxt = "n", xlab = "", ylab = "", bty = "n")
+fig1 <- readPNG("./figures/BRFSS_figure2.png", native=TRUE)
+# 
+# rasterImage(readPNG(source="./figures/BRFSS_figure1.png"), 1, 2, 2.5, 4)
+photo_panel <- ggdraw() + draw_image("./figures/BRFSS_figure2.png", x=0, y=0, width =1, height = 1) 
+photo_panel
+
+
+```
+
+
+<!-- \center -->
+
+<!-- ![](./figures/BRFSS_figure2.png){#id .class width=90% height=90%}   -->
+
+<!-- [your image caption](./figures/BRFSS_figure2.png) -->
+
+<!-- \center -->
+
+\newpage
+
+## Figure S3. Model Groupings
+
+<!-- ![Alt text](./figures/BRFSS_figure3.png){height=85%} -->
+
+<!-- Figure 3. Model groupings. -->
+
+```{r, echo = FALSE, out.width="90%", fig.align="center", fig.cap = paste("Model groupings")}
+#knitr::include_graphics('./figures/BRFSS_figure3.png')
+
+library(png)
+library(cowplot)
+library(ggplot2)
+#plot(NA, xlim = c(1,7), ylim = c(2,4), type = "n", xaxt = "n", yaxt = "n", xlab = "", ylab = "", bty = "n")
+fig1 <- readPNG("./figures/BRFSS_figure3.png", native=TRUE)
+# 
+# rasterImage(readPNG(source="./figures/BRFSS_figure1.png"), 1, 2, 2.5, 4)
+
+photo_panel <- ggdraw() + draw_image("./figures/BRFSS_figure3.png") 
+photo_panel
+```
+
+
+<!-- \center -->
+
+<!-- ![](./figures/BRFSS_figure3.png){#id .class width=100% height=100%}   -->
+<!-- [your image caption](./figures/BRFSS_figure3.png) -->
+
+<!-- \center -->
+
+```{r brfss_models, warning=FALSE, echo=FALSE, include=FALSE, results=FALSE}
+
+#functions which generate model outputs
+
+basedir2 <- getwd()
+  # source("./functions/BRFSS_result_dynamic_base.R")
+  # source("./functions/BRFSS_result_static_base.R")
+  # source("./functions/BRFSS_result_dynamic_grouped.R")
+  # source("./functions/BRFSS_result_static_grouped.R")
+
+#health variables used.  Z_NUOBES = obesity, Z_OVRWT1 = overweight, Z_DIABET = diabetes
+
+healthvariable_list <- c("Z_NUOBES","Z_OVRWT1","Z_HEART","Z_ANGINA","Z_STROKE",
+                 "Z_ASTHM3","Z_LORESP","Z_DXDEP","Z_KIDNEY","Z_DIABET", "Z_SMOKER")
+
+for (p in healthvariable_list) {
+
+  # setwd(basedir2)
+  # BRFSS_result_dynamic_base("Idaho", p, 19)
+  # setwd(basedir2)
+  # BRFSS_result_static_base("Idaho", p, 19)
+  # setwd(basedir2)
+  # BRFSS_result_static_grouped("Idaho", p, 19)
+  # setwd(basedir2)
+  # BRFSS_result_dynamic_grouped("Idaho", p, 19)
+  # setwd(basedir2)
+
+
+}
+
+#results are stored in the "outputs" folder
+
+#static results which were run previously are stored in the "results" folder
+
+```
+
+
+```{r brfss_maps_obesity, echo=FALSE, warning=FALSE, message=FALSE, results=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+library(multipanelfigure)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_NUOBES")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\blandscape
+
+## Figure S4. Obesity 2020 Static Base Model
+
+```{r brfss_maps_obesity1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Obesity 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1,  panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1 
+
+#grid.arrange(arrangeGrob(g1, ncol=1, nrow=1), arrangeGrob(g5, ncol=3))
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S5. Obesity 2020 Static Grouped Model
+
+```{r brfss_maps_obesity2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = "center", fig.cap = paste("Idaho Obesity 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+
+
+\elandscape
+
+\blandscape
+
+## Figure S6. Obesity 2020 Dynamic Base Model
+
+```{r brfss_maps_obesity3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = "center", fig.cap = paste("Idaho Obesity 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S7. Obesity 2020 Dynamic Grouped Model
+
+```{r brfss_maps_obesity4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Obesity 2020 - Dynamic Grouped Model.")}
+
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+```{r brfss_maps_overweight, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_OVRWT1")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+
+\elandscape
+
+\blandscape
+
+## Figure S8. Overweight 2020 Static Base Model
+
+```{r brfss_maps_overweight1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Overweight 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S9. Overweight 2020 Static Grouped Model
+
+```{r brfss_maps_overweight2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Overweight 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S10. Overweight 2020 Dynamic Base Model
+
+
+```{r brfss_maps_overweight3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Overweight 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S11. Overweight 2020 Dynamic Grouped Model
+
+```{r brfss_maps_overweight4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Overweight 2020 - Dynamic Grouped Model.")}
+
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_diabetes, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_DIABET")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S12. Diabetes 2020 Static Base Model
+
+```{r brfss_maps_diabetes1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Diabetes 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S13. Diabetes 2020 Static Grouped Model
+
+```{r brfss_maps_diabetes2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Diabetes 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S14. Diabetes 2020 Dynamic Base Model
+
+
+```{r brfss_maps_diabetes3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Diabetes 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S15. Diabetes 2020 Dynamic Grouped Model
+
+```{r brfss_maps_diabetes4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Diabetes 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_kidney, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_KIDNEY")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S16. Kidney Disease 2020 Static Base Model
+
+```{r brfss_maps_kidney1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Kidney Disease 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S17. Kidney Disease 2020 Static Grouped Model
+
+```{r brfss_maps_kidney2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Kidney Disease 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S18. Kidney Disease 2020 Dynamic Base Model
+
+
+```{r brfss_maps_kidney3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Kidney Disease 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S19. Kidney Disease 2020 Dynamic Grouped Model
+
+```{r brfss_maps_kidney4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Kidney Disease 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_dxdep, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_DXDEP")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S20. Depressive Disorder 2020 Static Base Model
+
+```{r brfss_maps_dxdep1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Depressive Disorder 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S21. Depressive Disorder 2020 Static Grouped Model
+
+```{r brfss_maps_dxdep2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Depressive Disorder 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S22. Depressive Disorder 2020 Dynamic Base Model
+
+
+```{r brfss_maps_dxdep3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Depressive Disorder 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S23. Depressive Disorder 2020 Dynamic Grouped Model
+
+```{r brfss_maps_dxdep4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Depressive Disorder 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_loresp, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_LORESP")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S24. Pulmonory Disease 2020 Static Base Model
+
+```{r brfss_maps_loresp1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Pulmonory 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S25. Pulmonory Disease  2020 Static Grouped Model
+
+```{r brfss_maps_loresp2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Pulmonory Disease 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S26. Pulmonory Disease 2020 Dynamic Base Model
+
+
+```{r brfss_maps_loresp3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Pulmonory Disease 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S27. Pulmonory Disease 2020 Dynamic Grouped Model
+
+```{r brfss_maps_loresp4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Pulmonory Disease 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_asthm, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_ASTHM3")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S28. Asthma 2020 Static Base Model
+
+```{r brfss_maps_asthm1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Asthma 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S29. Asthma 2020 Static Grouped Model
+
+```{r brfss_maps_asthm2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Asthma 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S30. Asthma 2020 Dynamic Base Model
+
+
+```{r brfss_maps_asthm3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Asthma 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S31. Asthma 2020 Dynamic Grouped Model
+
+```{r brfss_maps_asthm4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Asthma 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_stroke, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_STROKE")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S32. Stroke 2020 Static Base Model
+
+```{r brfss_maps_stroke1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Stroke 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S33. Stroke 2020 Static Grouped Model
+
+```{r brfss_maps_stroke2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Stroke 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S34. Stroke 2020 Dynamic Base Model
+
+
+```{r brfss_maps_stroke3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Stroke 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S35. Stroke 2020 Dynamic Grouped Model
+
+```{r brfss_maps_stroke4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Stroke 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_angina, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_ANGINA")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S36. Angina 2020 Static Base Model
+
+```{r brfss_maps_angina1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Angina 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S37. Angina 2020 Static Grouped Model
+
+```{r brfss_maps_angina2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Angina 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S38. Angina 2020 Dynamic Base Model
+
+
+```{r brfss_maps_angina3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Angina 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S39. Angina 2020 Dynamic Grouped Model
+
+```{r brfss_maps_angina4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Angina 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_heart, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_HEART")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S40. Heart Attack 2020 Static Base Model
+
+```{r brfss_maps_heart1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Heart Disease 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S41. Heart Disease 2020 Static Grouped Model
+
+```{r brfss_maps_heart2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Heart Disease 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S42. Heart Disease 2020 Dynamic Base Model
+
+
+```{r brfss_maps_heart3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Heart Disease 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S43. Heart Disease 2020 Dynamic Grouped Model
+
+```{r brfss_maps_heart4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Heart Disease 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+
+\elandscape
+
+\blandscape
+
+
+```{r brfss_maps_smoker, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("Z_SMOKER")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S44. Smoking 2020 Static Base Model
+
+```{r brfss_maps_smoker1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Smoking 2020 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S45. Smoking 2020 Static Grouped Model
+
+```{r brfss_maps_smoker2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Smoking 2020 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S46. Smoking 2020 Dynamic Base Model
+
+
+```{r brfss_maps_smoker3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Smoking 2020 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S47. Smoking 2020 Dynamic Grouped Model
+
+```{r brfss_maps_smoker4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Smoking 2020 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+
+
+```{r brfss_maps_hypertension, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("BPHIGH4")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 19, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 19, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 19, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 19, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 19, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 19, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 19, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 19, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S48. Hypertension 2019 Static Base Model
+
+```{r brfss_maps_hypertension1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S49. Hypertension 2019 Static Grouped Model
+
+```{r brfss_maps_hypertension2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S50. Hypertension 2019 Dynamic Base Model
+
+
+```{r brfss_maps_hypertension3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S51. Hypertension 2019 Dynamic Grouped Model
+
+```{r brfss_maps_hypertension4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+\elandscape
+
+
+\blandscape
+
+
+
+```{r brfss_maps_heartdisease_combined, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("HEARTDISEASE")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "static_base")
+  g2 <- BRFSS_map_counties("Idaho", p, 20, "static_grouped")
+  g3 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g4 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_grouped")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "static_base")
+  g6 <- BRFSS_results_plotting("Idaho", 20, p, "static_grouped")
+  g7 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  g8 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_grouped")
+}
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S52. Heart Disease Combined 2020 Static Base Model
+
+```{r brfss_maps_heartdisease_combined1, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Static Base Model.")}
+
+figure1 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure1 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure1
+#grid.arrange( g1,g5, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S53. Heart Disease Combined 2020 Static Grouped Model
+
+```{r brfss_maps_heartdisease_combined2, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Static Grouped Model.")}
+
+figure2 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure2 %<>%
+  fill_panel(g2, column = 1, row = 1)  %<>%
+  fill_panel(g6, column = 2:3, row = 1)
+figure2
+#grid.arrange( g2,g6, ncol=2)
+
+```
+\elandscape
+
+\blandscape
+
+## Figure S54. Heart Disease Combined 2020 Dynamic Base Model
+
+
+```{r brfss_maps_heartdisease_combined3, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Dynamic Base Model.")}
+
+figure3 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure3 %<>%
+  fill_panel(g3, column = 1, row = 1)  %<>%
+  fill_panel(g7, column = 2:3, row = 1)
+figure3
+#grid.arrange( g3,g7, ncol=2)
+
+```
+
+\elandscape
+
+\blandscape
+
+## Figure S55. Heart Disease Combined 2020 Dynamic Grouped Model
+
+```{r brfss_maps_heartdisease_combined4, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho Hypertension 2019 - Dynamic Grouped Model.")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g4, column = 1, row = 1)  %<>%
+  fill_panel(g8, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+\elandscape
+
+
+\blandscape
+
+```{r brfss_maps_risk_combined, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+
+  source("./EDA/BRFSS_map_counties.R")
+  source("./EDA/BRFSS_results_plotting.R")
+
+
+healthvariable_list <- c("risk")    
+for (p in healthvariable_list) {     
+  g1 <- BRFSS_map_counties("Idaho", p, 20, "dynamic_base")
+  g5 <- BRFSS_results_plotting("Idaho", 20, p, "dynamic_base")
+  
+}
+
+```
+
+## Figure S56. COVID Risk Prevalence: Probability of 1 out of 5 Health Conditions
+
+```{r brfss_maps_risk, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Idaho COVID Risk Prevalence: Probability of 1 our of 5 Health Conditions")}
+figure4 <- multi_panel_figure(columns = 3, rows = 1, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(g1, column = 1, row = 1)  %<>%
+  fill_panel(g5, column = 2:3, row = 1)
+figure4
+#grid.arrange( g4,g8, ncol=2)
+
+```
+
+\elandscape
+
+```{r brfss_allmodels, echo=FALSE, warning=FALSE, message=FALSE}
+  
+#dyn.load("/opt/modules/climatology/gdal/3.1.4/lib/libgdal.so.27")
+library(rgdal)
+library(rgeos)
+library(maptools)
+#library(spdep)
+library(sp)
+library(gridExtra)
+library(ggplot2)
+
+BRFSS_model_combined <- function(BRFSS_variable, state, BRFSS_year) {
+
+static_base_results_bestmodel <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_static_base/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+static_base_results_bestmodel$var <- "Static Base"
+
+static_grouped_results_bestmodel <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_static_grouped/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+static_grouped_results_bestmodel$var <- "Static Grouped"
+
+dynamic_base_results_bestmodel <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_dynamic_base/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+dynamic_base_results_bestmodel$var <- "Dynamic Base"
+
+dynamic_grouped_results_bestmodel <- read.csv(paste("./results/result_", BRFSS_variable, "/", BRFSS_variable, "_", BRFSS_year, "_dynamic_grouped/result_", BRFSS_variable, "_", BRFSS_year, ".csv", sep=""))
+dynamic_grouped_results_bestmodel$var <- "Dynamic Grouped"
+
+
+library(maps)
+  
+data(county.fips)
+fips <- read.csv(paste("./data/", state, "/", state, "_fips.csv", sep=""))
+countynames <- subset(county.fips, fips > 15999 & fips < 17000)
+static_base_results_bestmodel$COUNTIES <- countynames$polyname
+static_base_results_bestmodel$COUNTIES <- sapply(strsplit(static_base_results_bestmodel$COUNTIES, split=',', fixed=TRUE), function(x) (x[2]))
+static_grouped_results_bestmodel$COUNTIES <- countynames$polyname
+static_grouped_results_bestmodel$COUNTIES <- sapply(strsplit(static_grouped_results_bestmodel$COUNTIES, split=',', fixed=TRUE), function(x) (x[2]))
+dynamic_base_results_bestmodel$COUNTIES <- countynames$polyname
+dynamic_base_results_bestmodel$COUNTIES <- sapply(strsplit(dynamic_base_results_bestmodel$COUNTIES, split=',', fixed=TRUE), function(x) (x[2]))
+dynamic_grouped_results_bestmodel$COUNTIES <- countynames$polyname
+dynamic_grouped_results_bestmodel$COUNTIES <- sapply(strsplit(dynamic_grouped_results_bestmodel$COUNTIES, split=',', fixed=TRUE), function(x) (x[2]))
+
+bestmodels <- rbind(static_base_results_bestmodel, static_grouped_results_bestmodel, dynamic_base_results_bestmodel, dynamic_grouped_results_bestmodel)
+
+scaleFUN <- function(x) sprintf("%.2f", x)
+
+  if (BRFSS_variable == "Z_NUOBES") {
+    BR <- "OBESITY"
+#     
+# obesity_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# colnames(obesity_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# obesity_validation[,4:6] <- obesity_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, obesity_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + theme(legend.position="bottom") + labs(x = "Counties", y = "Obesity %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none")+ scale_y_continuous(labels=scaleFUN)
+
+# + geom_line(aes(y=validation_pct, colour="Validation"),size=.5, linetype = 2 ) 
+
+
+
+  } else if (BRFSS_variable == "Z_OVRWT1") {
+    BR <- "OVERWEIGHT"
+    
+# overweight_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# colnames(overweight_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# overweight_validation[,4:6] <- overweight_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, overweight_validation[,4:6])
+
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Overweight %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+  } else if (BRFSS_variable == "Z_DIABET") {
+    BR <- "DIABETES" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom")  + labs(x = "Counties", y = "Diabetes%")  + labs(color = "Legend") 
+
+
+  } else if (BRFSS_variable == "Z_KIDNEY"){
+    BR <- "KIDNEY" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Kidney Disease %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN) 
+
+
+
+  } else if (BRFSS_variable == "Z_DXDEP"){
+    BR <- "DEPRESSIVE DISORDER" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Depression %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+
+
+  } else if (BRFSS_variable == "Z_LORESP"){
+    BR <- "PULMONORY DISEASE" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom")  + labs(x = "Counties", y = "Pulmonory %")  + labs(color = "Legend") 
+
+  
+
+  } else if (BRFSS_variable == "Z_ASTHM3"){
+    BR <- "ASTHMA" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Asthma %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+  
+
+  } else if (BRFSS_variable == "Z_STROKE"){
+    BR <- "STROKE" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Stroke %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+  
+
+  } else if (BRFSS_variable == "Z_ANGINA"){
+    BR <- "ANGINA" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom")  + labs(x = "Counties", y = "Angina %")  + labs(color = "Legend") 
+
+  
+
+  } else if (BRFSS_variable == "Z_HEART"){
+    BR <- "HEART DISEASE" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Heart Attack %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+  
+} else if (BRFSS_variable == "BPHIGH4"){
+    BR <- "HYPERTENSION" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Hypertension %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+
+  } else if (BRFSS_variable == "Z_SMOKER"){
+    BR <- "SMOKING" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom") + labs(x = "Counties", y = "Smoking %") + theme(axis.text.x=element_blank(), axis.title.x=element_blank()) + theme(legend.position="none") + scale_y_continuous(labels=scaleFUN)
+
+
+
+  } else if (BRFSS_variable == "HEARTDISEASE"){
+    BR <- "HEART DISEASE COMBINED" 
+    
+# 
+# diabetes_validation <- read.csv(paste("./external_validation/", state, "/", state, "_validation_", BR, "_local.csv", sep=""))
+# diabetes_validation[,4:6] <- lapply(diabetes_validation[,4:6],as.numeric)
+# colnames(diabetes_validation) <- c("FIPS", "state", "county", "validation_pct", "validation_CI_lower", "validation_CI_higher")
+# diabetes_validation[,4:6] <- diabetes_validation[,4:6]/100
+# bestmodels <- cbind(bestmodels, diabetes_validation[,4:6])
+
+    
+ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) + 
+    theme(legend.position="bottom")  + labs(x = "Counties", y = "HDC %")  + labs(color = "Legend") 
+
+
+}
+
+
+
+
+
+
+#+  ggtitle(paste("All 2019 Idaho Models for ", BR, sep="" ))
+# 
+# 
+# ggplot(bestmodels, aes(x=COUNTIES, y = pct, group = var, color = var)) + geom_line(size=1.2) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1), text = element_text(size = 20)) +
+#     theme(legend.position="bottom") +  ggtitle(paste("All 2019 Idaho Models for ", BR, sep="" )) + labs(x = "Counties", y = "Percentage")
+
+}
+
+
+
+```
+
+\newpage
+## Figure S57. Model Outcome Comparison: Obesity, Overweight, Diabetes
+
+```{r brfss_obesity_all, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 12, fig.height = 9, fig.align = 'center', fig.cap = paste("Model outcomes per variable.")}
+
+library(multipanelfigure)
+
+figure4 <- multi_panel_figure(columns = 1, rows = 4, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(BRFSS_model_combined("Z_NUOBES", "Idaho", 20), row = 1, col = 1)  %<>%
+  fill_panel(BRFSS_model_combined("Z_OVRWT1", "Idaho", 20), row = 2, col = 1) %<>%
+  fill_panel(BRFSS_model_combined("Z_DIABET", "Idaho", 20), row = 3:4, col = 1)
+figure4
+
+#BRFSS_model_combined("Z_NUOBES", "Idaho", 19)
+
+```
+\newpage
+## Figure S58. Model Outcome Comparison: Kidney Disease, Depression Pulmonary Disease
+
+
+```{r brfss_obesity_all2, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 12, fig.height = 9, fig.align = 'center', fig.cap = paste("Model outcomes per variable.")}
+
+
+figure4 <- multi_panel_figure(columns = 1, rows = 4, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(BRFSS_model_combined("Z_KIDNEY", "Idaho", 20), row = 1, col = 1)  %<>%
+  fill_panel(BRFSS_model_combined("Z_DXDEP", "Idaho", 20), row = 2, col = 1) %<>%
+  fill_panel(BRFSS_model_combined("Z_LORESP", "Idaho", 20), row = 3:4, col = 1)
+figure4
+
+#BRFSS_model_combined("Z_NUOBES", "Idaho", 19)
+
+```
+\newpage
+## Figure S59. Model Outcome Comparison: Asthma, Stroke, Heart Attack
+
+
+```{r brfss_obesity_all3, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 12, fig.height = 9, fig.align = 'center', fig.cap = paste("Model outcomes per variable.")}
+
+
+figure4 <- multi_panel_figure(columns = 1, rows = 4, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(BRFSS_model_combined("Z_ASTHM3", "Idaho", 20), row = 1, col = 1)  %<>%
+  fill_panel(BRFSS_model_combined("Z_STROKE", "Idaho", 20), row = 2, col = 1) %<>%
+  fill_panel(BRFSS_model_combined("Z_ANGINA", "Idaho", 20), row = 3:4, col = 1)
+figure4
+
+#BRFSS_model_combined("Z_NUOBES", "Idaho", 19)
+
+```
+\newpage
+## Figure S60. Model Outcome Comparison: Heart Disease, Hypertension, Smoking
+
+
+```{r brfss_obesity_all4, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 12, fig.height = 9, fig.align = 'center', fig.cap = paste("Model outcomes per variable.")}
+
+
+figure4 <- multi_panel_figure(columns = 1, rows =5, panel_label_type = "upper-alpha")
+figure4 %<>%
+  fill_panel(BRFSS_model_combined("Z_HEART", "Idaho", 20), row = 1, col = 1)  %<>%
+  fill_panel(BRFSS_model_combined("BPHIGH4", "Idaho", 19), row = 2, col = 1) %<>%
+  fill_panel(BRFSS_model_combined("Z_SMOKER", "Idaho", 20), row = 3, col = 1) %<>%
+  fill_panel(BRFSS_model_combined("HEARTDISEASE", "Idaho", 20), row = 4:5, col = 1)
+
+figure4
+
+#BRFSS_model_combined("Z_NUOBES", "Idaho", 19)
+
+```
+
+
+\newpage
+## Figure S61. Model Error Comparisons
+
+```{r brfss_error1, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 12, fig.height = 9, fig.align = 'center', fig.cap = paste("Model outcomes per variable.")}
+
+  source("./EDA/BRFSS_validation_error.R")
+
+model <- c("static_base", "dynamic_base", "static_grouped", "dynamic_grouped")
+
+BRFSS_variable <- c("Z_NUOBES","Z_OVRWT1","Z_HEART","Z_ANGINA","Z_STROKE",
+                 "Z_ASTHM3","Z_LORESP","Z_DXDEP","Z_KIDNEY","Z_DIABET", "Z_SMOKER", "BPHIGH4", "HEARTDISEASE")
+
+output <- NULL
+for (i in BRFSS_variable) {
+  for (j in model) {
+modeloutput <- BRFSS_validation_error(j,i)
+output <- rbind(output,modeloutput)
+}}
+
+ 
+#output$FIPS <- as.character(output$FIPS)
+#dffinal <- rbind(df_static_base, df_dynamic_base, df_static_grouped, df_dynamic_grouped)
+ 
+output$REVec <- 1-output$REVec
+ gfg_plot <- ggplot(output,            
+                    aes(x = FIPS,
+                        y = REVec,
+                        color = model)) +  geom_line()
+ gfg_plot + facet_grid(variable~.) + theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + scale_x_continuous(labels = output$FIPS, breaks = output$FIPS) + geom_line(position = position_dodge(width = .05))
+  
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center'}
+
+#BRFSS COVID RISK
+library(dplyr)                                    
+library(plyr)                                     
+library(readr)  
+library(stringr)
+library(sjPlot)
+library(ggplot2)
+library(tidyverse)
+library(maptools)
+library(raster)
+library(leaflet)
+library(RColorBrewer)
+
+
+setwd("./json")
+temp = list.files(pattern="*.csv")
+new <- temp %>% lapply(read_csv) %>% bind_cols                                         
+new2 <- as.data.frame(new)
+new3 <- cbind(new2[c(1:5,13,21,29,37,45,53,61,69,77,85,93,101)])
+colnames(new3) <- c("FIPS", "total", "population", "district", "hypertension", "HD", "angina", "asthma", "diabetes", "depression", "heart_attack", "kidney", "pulmonary", "obesity", "overweight", "smoker", "stroke")
+
+covid <- read.csv("/mnt/ceph/erichs/git/IMCI-covid-risk/outputs/linear_risk_final_omicron.csv")
+covid$FIPS <- str_pad(covid$FIPS, 5, pad = "0")
+
+final_covid_omicron <- merge(new3, covid, by="FIPS", all.x=TRUE)
+final_covid_omicron$seqno <- rownames(final_covid_omicron)
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+final_covid_omicron$deaths_scaled <- range01(final_covid_omicron$deaths_adjusted)
+final_covid_omicron$cases_scaled <- range01(final_covid_omicron$cuml.cases_adjusted)
+
+final_covid_omicron[5] <- range01(final_covid_omicron[5])
+final_covid_omicron[6] <- range01(final_covid_omicron[6])
+final_covid_omicron[7] <- range01(final_covid_omicron[7])
+final_covid_omicron[8] <- range01(final_covid_omicron[8])
+final_covid_omicron[9] <- range01(final_covid_omicron[9])
+final_covid_omicron[10] <- range01(final_covid_omicron[10])
+final_covid_omicron[11] <- range01(final_covid_omicron[11])
+final_covid_omicron[12] <- range01(final_covid_omicron[12])
+final_covid_omicron[13] <- range01(final_covid_omicron[13])
+final_covid_omicron[14] <- range01(final_covid_omicron[14])
+final_covid_omicron[15] <- range01(final_covid_omicron[15])
+final_covid_omicron[16] <- range01(final_covid_omicron[16])
+final_covid_omicron[17] <- range01(final_covid_omicron[17])
+final_covid_omicron[66] <- range01(final_covid_omicron[66])
+final_covid_omicron[31] <- range01(final_covid_omicron[31])
+
+
+covid <- read.csv("/mnt/ceph/erichs/git/IMCI-covid-risk/outputs/linear_risk_final_delta.csv")
+covid$FIPS <- str_pad(covid$FIPS, 5, pad = "0")
+
+final_covid_delta <- merge(new3, covid, by="FIPS", all.x=TRUE)
+final_covid_delta$seqno <- rownames(final_covid_delta)
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+final_covid_delta$deaths_scaled <- range01(final_covid_delta$deaths_adjusted)
+final_covid_delta$cases_scaled <- range01(final_covid_delta$cuml.cases_adjusted)
+
+final_covid_delta[5] <- range01(final_covid_delta[5])
+final_covid_delta[6] <- range01(final_covid_delta[6])
+final_covid_delta[7] <- range01(final_covid_delta[7])
+final_covid_delta[8] <- range01(final_covid_delta[8])
+final_covid_delta[9] <- range01(final_covid_delta[9])
+final_covid_delta[10] <- range01(final_covid_delta[10])
+final_covid_delta[11] <- range01(final_covid_delta[11])
+final_covid_delta[12] <- range01(final_covid_delta[12])
+final_covid_delta[13] <- range01(final_covid_delta[13])
+final_covid_delta[14] <- range01(final_covid_delta[14])
+final_covid_delta[15] <- range01(final_covid_delta[15])
+final_covid_delta[16] <- range01(final_covid_delta[16])
+final_covid_delta[17] <- range01(final_covid_delta[17])
+final_covid_delta[66] <- range01(final_covid_delta[66])
+final_covid_delta[31] <- range01(final_covid_delta[31])
+
+covid <- read.csv("/mnt/ceph/erichs/git/IMCI-covid-risk/outputs/linear_risk_final.csv")
+covid$FIPS <- str_pad(covid$FIPS, 5, pad = "0")
+
+final_covid_alpha <- merge(new3, covid, by="FIPS", all.x=TRUE)
+final_covid_alpha$seqno <- rownames(final_covid_alpha)
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+final_covid_alpha$deaths_scaled <- range01(final_covid_alpha$deaths_adjusted)
+final_covid_alpha$cases_scaled <- range01(final_covid_alpha$cuml.cases_adjusted)
+
+final_covid_alpha[5] <- range01(final_covid_alpha[5])
+final_covid_alpha[6] <- range01(final_covid_alpha[6])
+final_covid_alpha[7] <- range01(final_covid_alpha[7])
+final_covid_alpha[8] <- range01(final_covid_alpha[8])
+final_covid_alpha[9] <- range01(final_covid_alpha[9])
+final_covid_alpha[10] <- range01(final_covid_alpha[10])
+final_covid_alpha[11] <- range01(final_covid_alpha[11])
+final_covid_alpha[12] <- range01(final_covid_alpha[12])
+final_covid_alpha[13] <- range01(final_covid_alpha[13])
+final_covid_alpha[14] <- range01(final_covid_alpha[14])
+final_covid_alpha[15] <- range01(final_covid_alpha[15])
+final_covid_alpha[16] <- range01(final_covid_alpha[16])
+final_covid_alpha[17] <- range01(final_covid_alpha[17])
+final_covid_alpha[66] <- range01(final_covid_alpha[66])
+final_covid_alpha[31] <- range01(final_covid_alpha[31])
+
+ fit_alpha_deaths_NI <- lm(deaths_scaled ~ hypertension + HD + angina + asthma + diabetes + depression + heart_attack + kidney + pulmonary + obesity + overweight + smoker + stroke, data = final_covid_alpha)
+ fit_delta_deaths_NI <- lm(deaths_scaled ~ hypertension + HD + angina + asthma + diabetes + depression + heart_attack + kidney + pulmonary + obesity + overweight + smoker + stroke,  data = final_covid_delta)
+ fit_omicron_deaths_NI <- lm(deaths_scaled ~ hypertension + HD + angina + asthma + diabetes + depression + heart_attack + kidney + pulmonary + obesity + overweight + smoker + stroke,    data = final_covid_omicron)
+
+ fit_alpha_deaths <- lm(deaths_scaled ~ HD * diabetes * kidney * pulmonary * overweight, data = final_covid_alpha)
+ fit_delta_deaths <- lm(deaths_scaled ~ HD * diabetes * kidney * pulmonary * overweight + hypertension + heart_attack + asthma + depression + obesity + smoker + stroke + angina,  data = final_covid_delta)
+ fit_omicron_deaths <- lm(deaths_scaled ~ HD * diabetes * kidney * pulmonary * overweight + hypertension + heart_attack + asthma + depression + obesity + smoker + stroke + angina,    data = final_covid_omicron)
+ 
+ 
+ fit_alpha_cases <- lm(cases_scaled ~ hypertension + HD + angina + asthma + diabetes + depression + heart_attack + kidney + pulmonary + obesity + overweight + smoker + stroke,  data = final_covid_alpha)
+ fit_delta_cases <- lm(cases_scaled ~ hypertension + HD + angina + asthma + diabetes + depression + heart_attack + kidney + pulmonary + obesity + overweight + smoker + stroke,  data = final_covid_delta)
+ fit_omicron_cases <- lm(cases_scaled ~ hypertension + HD + angina + asthma + diabetes + depression + heart_attack + kidney + pulmonary + obesity + overweight + smoker + stroke,  data = final_covid_omicron)
+ 
+```
+
+## Figure S62: Omicron - Obesity vs. deaths
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Omicron - obesity vs. deaths")}
+
+ggplot(final_covid_omicron, aes(x=county.x, y=obesity, group =1))+
+  geom_line(color="red")+
+  geom_line(aes(y=deaths_scaled), color="blue")+
+  theme(axis.text.x=element_text(angle=90,hjust=1))
+
+```
+## Figure S63: Alpha cases estimates
+
+ 
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Alpha cases Estimates")}
+
+plot_model(fit_alpha_cases)
+
+```
+
+## Figure S64: Delta cases estimates
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Delta cases Estimates")}
+
+plot_model(fit_delta_cases)
+```
+
+## Figure S65: Omicron cases estimates
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Omicron cases Estimates")}
+
+plot_model(fit_omicron_cases)
+```
+
+## Figure S66: Alpha deaths estimates
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Alpha deaths Estimates")}
+
+plot_model(fit_alpha_deaths_NI)
+```
+
+## Figure S67: Delta deaths estimates
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Delta deaths Estimates")}
+
+plot_model(fit_delta_deaths_NI)
+```
+
+## Figure S68: Omicron deaths estimates
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Omicron deaths Estimates")}
+
+plot_model(fit_omicron_deaths_NI)
+```
+
+## Figure S69: Alpha deaths estimates - interactions
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Alpha deaths Estimates - Interactions")}
+
+plot_model(fit_alpha_deaths)
+```
+
+## Figure S70: Delta deaths estimates - interactions
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Delta deaths Estimates - Interactions")}
+
+plot_model(fit_delta_deaths)
+```
+
+## Figure S71: Omicron deaths estimates - interactions
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Omicron deaths Estimates - Interactions")}
+
+plot_model(fit_omicron_deaths)
+```
+
+#Figure S72: Prevalence Ratio
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("Combined Risk by County and Health District")}
+
+
+final_covid_alpha$PR_hypertension <- final_covid_alpha$hypertension/(final_covid_alpha$deaths/final_covid_alpha$population.x)
+
+
+#stacked barplot
+
+new_barplot <- new3
+
+nb <- range01(new_barplot[,5:17])
+
+nb2 <- cbind(new_barplot[,1:4], nb)
+
+nb2$county <- final_covid_omicron$county.x
+nb2$sum <- rowSums(nb2[c(6,9,12,13,14)])
+
+
+df_long <- nb2 %>% gather(health, value, c("HD", "diabetes", "kidney", "pulmonary", "obesity"))
+
+
+#cumulative risk
+
+ggplot(df_long, aes(fill=health, y=value, x=county)) + 
+  geom_bar(position="stack", stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme_classic()
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("COVID Risk: 1 out of 5 Prevalence Map")}
+
+#map of risk
+setwd("./json/")
+risk <- read.csv("result_risk_20.csv")
+
+states <- readShapePoly('../geodata/states_conus.shp',
+                        proj4string=CRS
+                        ("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+projection = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+
+#states <- subset(states, STATE_NAME != "Alaska")
+#states <- subset(states, STATE_NAME != "Hawaii")
+
+states <- subset(states, STATE_NAME == "Idaho")
+
+
+counties <- readShapePoly('../geodata/UScounties_conus.shp',
+                          proj4string=CRS
+                          ("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+projection = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+
+colnames(counties@data)[1] <- "county"
+colnames(counties@data)[2] <- "state"
+colnames(counties@data)[5] <- "fips"
+
+#counties <- subset(counties, state == state)
+counties <- counties[counties$state == "Idaho",]
+
+names(risk)[names(risk) == 'GEOID'] <- 'fips'
+m <- merge(counties, risk, by=c("fips"), all.x = TRUE)
+m <- m[order(m$pct), ]
+
+exte <- as.vector(extent(m))
+
+
+pal2 <- colorNumeric(brewer.pal(9, "BuGn"), na.color = "#ffffff",
+                     domain = m$sum)
+
+
+#spplot(m, zcol = "pct", col.regions = pal2(m$pct), axis.pos = 1, main = "Risk Combined")
+
+
+risk$county <- final_covid_omicron$county.x
+
+```
+
+## Figure S73: COVID Risk Prevalence Barplot: 1 out of 5 Health Conditions
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("COVID Risk: 1 out of 5 Prevalence Barplot")}
+
+risk$HEALTHDIST[risk$HEALTHDIST==101] <- "PHD 1"
+risk$HEALTHDIST[risk$HEALTHDIST==102] <- "PHD 2"
+risk$HEALTHDIST[risk$HEALTHDIST==103] <- "PHD 3"
+risk$HEALTHDIST[risk$HEALTHDIST==104] <- "PHD 4"
+risk$HEALTHDIST[risk$HEALTHDIST==105] <- "PHD 5"
+risk$HEALTHDIST[risk$HEALTHDIST==106] <- "PHD 6"
+risk$HEALTHDIST[risk$HEALTHDIST==107] <- "PHD 7"
+
+#ggplot(risk, aes(y=pct, x=county)) + geom_bar() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggplot(risk) +
+  geom_bar( aes(x=reorder(HEALTHDIST, pct), label = county, y=pct, fill=as.factor(HEALTHDIST), group=county), position= position_dodge2(width=.9, preserve = "single", padding = .1), stat="identity", color = "darkgray", alpha=0.7) + theme_classic() + geom_text(aes(x=reorder(HEALTHDIST, pct), label = county, y=-.093, fill=as.factor(HEALTHDIST), group=county), position = position_dodge2(width = 0.9, preserve = "single"), angle = 90, vjust=0.30, color = "black", hjust = .03) + xlab("Health Districts/Counties") + ylab("Percentage") + guides(fill=guide_legend(title='Health District Legend')) + scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+
+```
+
+## Figure S74: COVID Risk Prevalence BoxPlot: 1 out of 5 Health Conditions
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align = 'center', fig.cap = paste("COVID Risk: 1 out of 5 Prevalence Barplot")}
+library(viridis)
+library(tidyverse)
+library(hrbrthemes)
+
+
+risk$all <- 1
+ggplot(risk, aes(x=all, y=pct)) +
+    geom_boxplot() +
+    scale_fill_viridis(discrete = FALSE, alpha=0.3) +
+    geom_jitter(aes(col=HEALTHDIST), size=3, alpha=0.7, width = .1) +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("Risk Prevalence - 1 of 5") +
+    xlab("") + theme_classic()
+
+```

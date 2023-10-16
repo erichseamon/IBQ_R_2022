@@ -1,0 +1,26 @@
+{
+    "id": "540D5790",
+    "path": "~/git/haclab-brfss-covid/functions/BRFSS_ipfp_dynamic_grouped.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "3592642713",
+    "contents": "",
+    "dirty": false,
+    "created": 1668024291235.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "215,68",
+        "scrollLine": "209"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1668024958,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1668024958422,
+    "read_only": false,
+    "read_only_alternatives": []
+}

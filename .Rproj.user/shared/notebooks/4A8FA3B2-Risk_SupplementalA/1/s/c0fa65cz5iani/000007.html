@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+<script src="lib/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lib/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="lib/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="lib/kePrint-0.0.1/kePrint.js"></script>
+<link href="lib/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+</head>
+<body>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>Table 1: Independent Variable Descriptions</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Type </th>
+   <th style="text-align:left;"> Variables </th>
+   <th style="text-align:left;"> Description </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Socioeconomic Status </td>
+   <td style="text-align:left;width: 3in; "> Index which represents income, poverty, employment, and education. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Household Composition and Disability </td>
+   <td style="text-align:left;width: 3in; "> Index with represents age, single parenting, and disability. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Minority Status </td>
+   <td style="text-align:left;width: 3in; "> Index which represents race and ethnicity. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Housing Type and Transportation </td>
+   <td style="text-align:left;width: 3in; "> Index which represents housing structure, crowding and vehicle access. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Political Divergence </td>
+   <td style="text-align:left;width: 3in; "> This is a calculated variable, based on the 2020 U.S. Presidential election, and is scaled below 1. We examine, for each county, the percentage of democratic and conservative votes - and construct a ratio with those counties directly adjacent. This value provides an estimate of political divergence (e.g.  Counties which are democratic, surrounded by conservative counties, receive a value from 0 to 1, while those conservative counties, surrounded by liberal counties, receives a value from ranging from 1 and above). </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Democratic Voting Percentage </td>
+   <td style="text-align:left;width: 3in; "> Represents voting outcomes from the 2020 presidential general election. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Vaccination Rate </td>
+   <td style="text-align:left;width: 3in; "> CDC data for two dose vaccination rates at a county level, ending in April 1, 2022. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Population Density </td>
+   <td style="text-align:left;width: 3in; "> Population density at a county level. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Obesity </td>
+   <td style="text-align:left;width: 3in; "> Number of people who are obese, at a county level. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Unemployment </td>
+   <td style="text-align:left;width: 3in; "> Number of unemployed adults per county. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Uninsured Adults </td>
+   <td style="text-align:left;width: 3in; "> Number of uninsured adults per county. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Social Associations </td>
+   <td style="text-align:left;width: 3in; "> Number of people who are members of a social organization (churches, clubs, etc). </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Diabetes </td>
+   <td style="text-align:left;width: 3in; "> Number of people with diabetes at a county level. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Food Insecurity </td>
+   <td style="text-align:left;width: 3in; "> Index indicating the relative level of food insecurity in a county. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Broadband Access </td>
+   <td style="text-align:left;width: 3in; "> Number of people without broadband access. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:left;"> Population Age 65+ </td>
+   <td style="text-align:left;width: 3in; "> Number of people age 65 or older in a county. </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dependent </td>
+   <td style="text-align:left;"> Population adjusted COVID-19 deaths </td>
+   <td style="text-align:left;width: 3in; "> Population-adjusted COVID-19 deaths per county. </td>
+  </tr>
+</tbody>
+</table> <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [["$","$"]]}})</script><script async src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
