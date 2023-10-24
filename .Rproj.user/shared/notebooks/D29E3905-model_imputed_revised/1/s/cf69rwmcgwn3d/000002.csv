@@ -1,7 +1,0 @@
-"0",""
-"0",""
-"0","colnames(all_combined_final) <- c(""accuracy"", ""kappa"", ""AUC"", ""accuracy"", ""kappa"", ""AUC"")"
-"0","kable(round(all_combined_final, 3)) %>%"
-"0","kable_styling(""striped"", full_width = F,"
-"0","                position = ""left"", font_size = 12) %>%"
-"0","  add_header_above(c(""models"" = 1, ""Exp. VS. CG1 classification: All Variabes"" = 3, ""Exp. VS. CG2 classification: All Variables"" = 3))"
