@@ -1,16 +1,96 @@
 ---
-title: "IBQ_R 2022"
-author: "Masha Gartstein, Erich Seamon"
+title: "IBQ Machnine Learning Supplemental 2023"
+authors: "Masha Gartstein, Erich Seamon"
 date: "10/25/2022"
-output: pdf_document
-classoption: landscape
+subtitle: 'The material contained herein is supplementary to the article named in the title and submitted to the journal, XXX.' 
+always_allow_html: yes
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+- \usepackage{setspace}\doublespacing
+- \renewcommand{\figurename}{Figure S}
+- \renewcommand{\tablename}{Table S}
+output:
+  pdf_document: default
+  html_document:
+    css: custom.css
+    code_folding: hide
+    highlight: textmate
+    theme: united
+    toc: true
+    toc_float: true
+params: null
+mainfont: serif
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width=15, fig.height=8.5)
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center", fig.width=16, fig.height=8.5, dpi=400, dev = "cairo_pdf")
 knitr::opts_knit$set(root.dir = "/mnt/ceph/erichs/git/IBQ_R_2022/", warning = FALSE, message = FALSE)  # with something else than `getwd()`
+
+usePackage <- function(p) {
+    if (!is.element(p, installed.packages()[,1]))
+        install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org")
+    require(p, character.only = TRUE)
+}
+usePackage("extrafont")
+usePackage("ggplot2")
+usePackage("webshot")
+#webshot::install_phantomjs()
+loadfonts()
 ```
 
+This supplemental appendix provides exploratory data and factor analyses of agricultural insurance loss for the Pacific Northwest (PNW) and the inland Pacific Northwest (iPNW) of the United States.
+
+\newpage
+
+## Supplemental Figure and Tables List
+
+### Itemized Models
+
+Figure S1: Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - ALL VARIABLES
+
+Figure S2: Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - ALL VARIABLES
+
+Figure S3: Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - ALL VARIABLES
+
+Figure S4: Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - ALL VARIABLES
+
+### Transformed Feature Models
+
+Figure S5: Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - TRANSFORMED VARIABLES
+
+Figure S6: Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - TRANSFORMED VARIABLES
+
+Figure S7: Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - TRANSFORMED VARIABLES
+
+Figure S8: Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - TRANSFORMED VARIABLES
+
+### Feature Importance Graphs
+
+Figure S9: Feature Importance: Chronological Age Group vs. Pre-Term Group - ALL VARIABLES
+
+Figure S10: Feature Importance: Age Adjusted Group vs. Pre-Term Group - ALL VARIABLES
+
+Figure S11: Feature Importance: Chronological Age Group vs. Pre-Term Group - TRANSFORMED VARIABLES
+
+Figure S12: Feature Importance: Age Adjusted Group vs. Pre-Term Group - TRANSFORMED VARIABLES
+
+### Model Results Tables
+
+Table S1: Model Results: ALL VARIABLES
+
+Table S2: Model Results: TRANSFORMED VARIABLES
+
+### Model Comparisons
+
+Figure S13: R2 Comparisons - Chronological Age Group VS Pre-Term Group, Transformed Variables VS. All Variables
+
+Figure S14: AUC Comparisons - Chronological Age Group VS Pre-Term Group, Transformed Variables VS. All Variables
+
+Figure S15: R2 Comparisons - Age Adjusted Group VS Pre-Term Group, Transformed Variables VS. All Variables
+
+Figure S16: AUC Comparisons - Age Adjusted Group VS Pre-Term Group, Transformed Variables VS. All Variables
 
 ```{r, results='hide', echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
 
@@ -47,8 +127,6 @@ ibq_impute$ec <- rowMeans(ibq_impute[c(12,13,18,19,25,26,31,32,37,38,41,42)])
 
 ```
 
-# Exploratory Data Analysis
-
 ```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
 
 #aggr_plot <- aggr(tempData$data, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(tempData$data), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
@@ -71,10 +149,11 @@ ibq_impute$ec <- rowMeans(ibq_impute[c(12,13,18,19,25,26,31,32,37,38,41,42)])
 
 ```
 
+\newpage
 
 ## Model Development and Output: Chronological Age Group VS. Pre-Term Group - ALL VARIABLES
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - All Variables.")}
 
 set.seed(9999)
 library(haven)
@@ -139,10 +218,9 @@ bwplot(results, main = "Model Accuracy Estimates: Chronological Age Group VS. Pr
 
 
 ```
-
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - All Variables.")}
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50", "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
@@ -188,12 +266,11 @@ results_one_all <- results
 auc_one_all <- txt2
 
 ```
-
-
+\newpage
 
 ## Model Development and Output: Adjusted Age Group VS. Pre-Term Group - ALL VARIABLES
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - All Variables.")}
 set.seed(9999)
 library(haven)
 library(klaR)
@@ -257,12 +334,9 @@ bwplot(results, main = "Model Accuracy Estimates: Adjusted Age Group VS. Pre-Ter
 
 
 ```
-
 \newpage
 
-
-
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - All Variables.")}
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50", "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
@@ -309,10 +383,12 @@ auc_two_all <- txt2
 
 ```
 
+\newpage
+
 ## Model Development and Output: Chronological Age Group VS. Pre-Term Group - TRANSFORMED VARIABLES
 
 
-```{r, echo=FALSE, warning = FALSE, results = 'hide', message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, results = 'hide', message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - Transformed Variables.")}
 set.seed(9999)
 library(haven)
 library(klaR)
@@ -378,7 +454,7 @@ bwplot(results, main = "Model Accuracy Estimates: Chronological Age Group VS. Pr
 
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Transformed Variables.")}
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50", "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
@@ -424,12 +500,11 @@ results_one_trans <- results
 auc_one_trans <- txt2
 
 ```
-
-
+\newpage
 
 ## Model Development and Output: Adjusted Age Group VS. Pre-Term Group - TRANSFORMED VARIABLES
 
-```{r, echo=FALSE, results = 'hide', warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, results = 'hide', warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - Transformed Variables.")}
 set.seed(9999)
 library(haven)
 library(klaR)
@@ -495,10 +570,9 @@ bwplot(results, main = "Model Accuracy Estimates: Adjusted Age Group VS. Pre-Ter
 ```
 
 
+\newpage
 
-
-
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Transformed Variables.")}
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50", "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
@@ -544,11 +618,11 @@ results_two_trans <- results
 auc_two_trans <- txt2
 
 ```
-
+\newpage
 
 ## Feature Importance - Random Forest Model Results: Transformed Variables
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - All Variables.")}
 
 #remove scale = FALSE to address negatives
 
@@ -595,23 +669,26 @@ p2a <- ggplot(p2[1:3,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=
 
 ```
 
+\newpage
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - Transformed Variables")}
 
 p1a
 
 ```
 
 \newpage
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5}
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Age Adjusted Group vs. Pre-Term Group - Transformed Variables")}
 
 p2a
 
 ```
+\newpage
 
 ## Feature Importance - Random Forest Model Results: All Variables
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - All Variables")}
 
 # p1 <- varImp(fit_rf_control_one_all, scale = FALSE)$importance
 # p1$name <- rownames(p1)
@@ -652,7 +729,9 @@ p2a <- ggplot(p2[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y
 
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5}
+\newpage
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - All Variables")}
 
 p1a
 
@@ -660,7 +739,7 @@ p1a
 
 \newpage
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Age Adjusted Group vs. Pre-Term Group - All Variables")}
 
 p2a
 
@@ -753,7 +832,7 @@ rownames(trans_combined_final) <- modelnames
 
 
 colnames(all_combined_final) <- c("accuracy", "kappa", "AUC", "accuracy", "kappa", "AUC")
-kable(round(all_combined_final, 3)) %>%
+kable(round(all_combined_final, 3), caption = "Model Results: Transformed Variables") %>%
 kable_styling("striped", full_width = F,
                 position = "left", font_size = 12) %>%
   add_header_above(c("models" = 1, "Chronological VS. Pre-Term: All Variabes" = 3, "Adjusted Age VS. Pre-Term: All Variables" = 3))
@@ -766,7 +845,7 @@ kable_styling("striped", full_width = F,
 
 
 colnames(trans_combined_final) <- c("accuracy", "kappa", "AUC", "accuracy", "kappa", "AUC")
-kable(round(trans_combined_final, 3)) %>%
+kable(round(trans_combined_final, 3), caption = "Model Results: Transformed Variables") %>%
 kable_styling("striped", full_width = F,
                 position = "left", font_size = 12) %>%
   add_header_above(c("models" = 1, "Chronological VS. Pre-Term: Transformed Variabes" = 3, "Adjusted Age VS. Pre-Term: Transformed Variables" = 3))
@@ -799,67 +878,92 @@ kable_styling("striped", full_width = F,
 
 ```
 
+\newpage
 
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("Model Accuracy Estimates: Chronological Age Group VS. Pre-Term Group - All Variables.")}
 library(kableExtra)
 
 R2 <- cbind.data.frame(all_combined_final[,c(1,4)], trans_combined_final[,c(1,4)])
 #R2$model <- row.names(R2)
 #R2$modelid <- c(1:11)
 R2$modelname <- c("lda", "glm", "svm", "knn", "nb", "cart", "c5.0", "bagging", "rf", "gbm", "adabag")
-colnames(R2) <- c("Chronological Age Group - All Variables", "Age Adjusted Group - All Variables", "Chronological Age Group - Transformed Variables", "Age Adjusted Group - Transformed Variables", "modelname")
+colnames(R2) <- c("Chronological Age Group, All Variables", "Age Adjusted Group, All Variables", "Chronological Age Group, Transformed Variables", "Age Adjusted Group, Transformed Variables", "modelname")
 
 AUC <- cbind.data.frame(all_combined_final[,c(3,6)], trans_combined_final[,c(3,6)])
 #AUC$model <- row.names(AUC)
 #AUC$modelid <- c(1:11)
 AUC$modelname <- c("lda", "glm", "svm", "knn", "nb", "cart", "c5.0", "bagging", "rf", "gbm", "adabag")
-colnames(AUC) <- c("Chronological Age Group - All Variables", "Age Adjusted Group - All Variables", "Chronological Age Group - Transformed Variables", "Age Adjusted Group - Transformed Variables", "modelname")
+colnames(AUC) <- c("Chronological Age Group, All Variables", "Age Adjusted Group, All Variables", "Chronological Age Group, Transformed Variables", "Age Adjusted Group, Transformed Variables", "modelname")
 
 R2_long <- melt(R2, id = "modelname")
 AUC_long <- melt(AUC, id = "modelname")
 
+names(R2_long)[names(R2_long) == 'variable'] <- 'Legend'
+names(AUC_long)[names(AUC_long) == 'variable'] <- 'Legend'
+
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("R2 Comparisons - Chronological Age Group VS Pre-Term Group, Transformed Variables VS. All Variables.")}
+library(kableExtra)
 
 R2plot_all <- ggplot(R2_long[c(1:11, 23:33),],            
                aes(x = modelname,
-                   y = value, 
-                   color = variable, group = variable)) +  geom_line() + theme_bw() + ylim(0,.75) +
-scale_color_manual(values=c('lightgreen','darkgreen'))+theme(text=element_text(size=18))+ labs(color = "Legend")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+labs(y= "R2 Value", x = "Model Type", title="R2 Chronological Age Model Comparisons", subtitle="Transformed vs All")
+                   y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
+scale_color_manual(values=c('lightgreen','darkgreen'))+theme(text=element_text(size=24))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=18))+labs(y= "R2 Value", x = "Model Type", title="R2 Chronological Age Model Comparisons", subtitle="Transformed vs All")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + 
+    theme(legend.key.width = unit(5, "line"))
 R2plot_all
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("AUC Comparisons - Chronological Age Group VS Pre-Term Group, Transformed Variables VS. All Variables.")}
+library(kableExtra)
 
 AUCplot_all <- ggplot(AUC_long[c(1:11, 23:33),],            
                aes(x = modelname,
-                   y = value, 
-                   color = variable, group = variable)) +  geom_line() + theme_bw() + ylim(0,.75) +
-scale_color_manual(values=c('lightgreen','darkgreen'))+theme(text=element_text(size=18))+ labs(color = "Legend")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+labs(y= "AUC Value", x = "Model Type", title="AUC Chronological Age Model Comparisons", subtitle="Transformed vs All")
+                   y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
+scale_color_manual(values=c('lightgreen','darkgreen'))+theme(text=element_text(size=24))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=18))+labs(y= "AUC Value", x = "Model Type", title="AUC Chronological Age Model Comparisons", subtitle="Transformed vs All")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + 
+    theme(legend.key.width = unit(5, "line"))
 AUCplot_all
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("R2 Comparisons - Age Adjusted Group VS Pre-Term Group, Transformed Variables VS. All Variables.")}
+library(kableExtra)
 
 R2plot_trans <- ggplot(R2_long[c(12:22, 34:44),],            
                aes(x = modelname,
-                   y = value, 
-                   color = variable, group = variable)) +  geom_line() + theme_bw() + ylim(0,.75) +
-scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(size=18))+ labs(color = "Legend")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+labs(y= "R2 Value", x = "Model Type", title="R2 Adjusted Age Model Comparisons", subtitle="Transformed vs All")
+                   y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
+scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(size=24))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=18))+labs(y= "R2 Value", x = "Model Type", title="R2 Adjusted Age Model Comparisons", subtitle="Transformed vs All")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + 
+    theme(legend.key.width = unit(5, "line"))
 R2plot_trans
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("AUC Comparisons - Age Adjusted Group VS Pre-Term Group, Transformed Variables VS. All Variables.")}
+library(kableExtra)
 
 AUCplot_trans <- ggplot(AUC_long[c(12:22, 34:44),],            
                aes(x = modelname,
-                   y = value, 
-                   color = variable, group = variable)) +  geom_line() + theme_bw() + ylim(0,.75) +
-scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(size=18))+ labs(color = "Legend")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+labs(y= "AUC Value", x = "Model Type", title="AUC Adjusted Age Model Comparisons", subtitle="Transformed vs All")
+                   y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
+scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(size=24))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=18))+labs(y= "AUC Value", x = "Model Type", title="AUC Adjusted Age Model Comparisons", subtitle="Transformed vs All")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + 
+    theme(legend.key.width = unit(5, "line"))
 AUCplot_trans
 
-R2plot <- ggplot(R2_long,            
-               aes(x = modelname,
-                   y = value, 
-                   color = variable, group = variable)) +  geom_line() + theme_bw() + ylim(0,.75) +
-scale_color_manual(values=c('lightgreen','darkgreen','lightblue','darkblue'))+theme(text=element_text(size=18))+ labs(color = "Legend")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+labs(y= "R2 Value", x = "Model Type", title="R2 All Model Comparisons", subtitle="Transformed vs All")
-R2plot
-
-AUCplot <- ggplot(AUC_long,            
-               aes(x = modelname,
-                   y = value, 
-                   color = variable, group = variable)) +  geom_line() + theme_bw() + ylim(0,.75) +
-scale_color_manual(values=c('lightgreen','darkgreen','lightblue','darkblue'))+theme(text=element_text(size=18))+ labs(color = "Legend")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+labs(y= "AUC Value", x = "Model Type", title="AUC All Model Comparisons", subtitle="Transformed vs All")
-AUCplot
+# R2plot <- ggplot(R2_long,            
+#                aes(x = modelname,
+#                    y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
+# scale_color_manual(values=c('lightgreen','darkgreen','lightblue','darkblue'))+theme(text=element_text(size=24))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=18))+labs(y= "R2 Value", x = "Model Type", title="R2 All Model Comparisons", subtitle="Transformed vs All")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 4)) + 
+#     theme(legend.key.width = unit(5, "line"))
+# R2plot
+# 
+# AUCplot <- ggplot(AUC_long,            
+#                aes(x = modelname,
+#                    y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
+# scale_color_manual(values=c('lightgreen','darkgreen','lightblue','darkblue'))+theme(text=element_text(size=24))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=18))+labs(y= "AUC Value", x = "Model Type", title="AUC All Model Comparisons", subtitle="Transformed vs All")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 4)) + 
+#     theme(legend.key.width = unit(5, "line"))
+# AUCplot
 
 ```
+
