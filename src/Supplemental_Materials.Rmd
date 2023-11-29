@@ -83,6 +83,63 @@ ibq_impute$sur <- rowMeans(ibq_impute[c(8,9,14,15,20,21,22,27,28,33,34,43,44)])
 ibq_impute$ec <- rowMeans(ibq_impute[c(12,13,18,19,25,26,31,32,37,38,41,42)])
 
 ```
+\newpage
+
+```{r image-ref-for-in-text, echo = FALSE, message=FALSE, fig.align='center', fig.cap=paste("Quantitative methodology:  Four analysis types were considered. For each analysis type, 11 classification machine learning algorithms were used, resulting in a total of 44 model outputs."), out.width='0.75\\linewidth', fig.pos='H'}
+knitr::include_graphics("./images/Figure1.pdf")
+```
+\newpage
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+library(kableExtra)
+library(gridExtra)
+
+questions <- c("Item 1: When being dressed or undressed during the last week, how often did the baby squirm and/or try to roll away?", "Item 2: When tossed around playfully how often did the baby laugh?", "Item 3: When tired, how often did your baby show distress?", "Item 4: When introduced to an unfamiliar adult, how often did the baby cling to a parent?", "Item 5: How often during the last week did the baby enjoy being read to?", "Item 6: How often during the last week did the baby play with one toy or object for 5-10 minutes?", "Item 7: How often during the week did your baby move quickly toward new objects?", "Item 8: When put into the bath water, how often did the baby laugh?", "Item 9: When it was time for bed or a nap and your baby did not want to go, how often did s/he whimper or sob?", "Item 10: After sleeping, how often did the baby cry if someone doesn’t come within a few minutes?", "Item 11: In the last week, while being fed in your lap, how often did the baby seem eager to get away as soon as the feeding was over?", "Item 12: When singing or talking to your baby, how often did s/he soothe immediately?", "Item 13: When placed on his/her back, how often did the baby squirm and/or turn body?", "Item 14: During a peekaboo game, how often did the baby laugh?", "Item 15: How often does the infant look up from playing when the telephone rings?", "Item 16: How often did the baby seem angry (crying and fussing) when you left her/him in the crib?", "Item 17: How often during the last week did the baby startle at a sudden change in body position (e.g., when moved suddenly)?", "Item 18: How often during the last week did the baby enjoy hearing the sound of words, as in nursery rhymes?", "Item 19: How often during the last week did the baby look at pictures in books and/or magazines for 5 minutes or longer at a time?", "Item 20: When visiting a new place, how often did your baby get excited about exploring new surroundings?", "Item 21: How often during the last week did the baby smile or laugh when given a toy?", "Item 22: At the end of an exciting day, how often did your baby become tearful?", "Item 23: How often during the last week did the baby protest being placed in a confining place (infant seat, play pen, car seat, etc.)?", "Item 24: When being held, in the last week, did your baby seem to enjoy him/herself?", "Item 25: When showing the baby something to look at, how often did s/he soothe immediately?", "Item 26: When hair was washed, how often did the baby vocalize?", "Item 27: How often did your baby notice the sound of an airplane passing overhead?", "Item 28: When introduced to an unfamiliar adult, how often did the baby refuse to go to the unfamiliar person?", "Item 29: When you were busy with another activity, and your baby was not able to get your attention, how often did s/he cry?", "Item 30: How often during the last week did the baby enjoy gentle rhythmic activities, such as rocking or swaying?", "Item 31: How often during the last week did the baby stare at a mobile, crib bumper or picture for 5 minutes or longer?", "Item 32: When the baby wanted something, how often did s/he become upset when s/he could not get what s/he wanted?", "Item 33: When in the presence of several unfamiliar adults, how often did the baby cling to a parent?", "Item 34: When rocked or hugged, in the last week, did your baby seem to enjoy him/herself?", "Item 35: When patting or gently rubbing some part of the baby’s body, how often did s/he soothe immediately?", "Item 36: How often did your baby make talking sounds when riding in a car?", "Item 37: When placed in an infant seat or car seat, how often did the baby squirm and turn body?")
+
+Surgency <- as.data.frame(questions[c(1,2,7,8,13,14,15,20,21,26,27,36,37)])
+colnames(Surgency) <- "Surgency"
+Negative_Affect <- as.data.frame(questions[c(3,4,9,10,16,17,22,23,28,29,32,33)])
+colnames(Negative_Affect) <- "Negative Affect"
+Effortful_Control <- as.data.frame(questions[c(5,6,11,12,18,19,24,25,30,31,34,35)])
+colnames(Effortful_Control) <- "Effortful Control"
+
+
+
+```
+
+#
+\pagebreak
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+kable(Surgency, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Surgency") %>%
+kable_styling(position = "left", font_size = 12) %>% row_spec(0,bold=TRUE) %>%
+  column_spec(1, width = "40em")
+
+```
+#
+\pagebreak
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+kable(Negative_Affect, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Negative Affect") %>%
+kable_styling(position = "left", font_size = 12) %>% row_spec(0,bold=TRUE) %>%
+  column_spec(1, width = "40em")
+
+```
+#
+\pagebreak
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+kable(Effortful_Control, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Effortful Control") %>%
+kable_styling(position = "left", font_size = 12) %>% row_spec(0,bold=TRUE) %>%
+  column_spec(1, width = "40em")
+
+```
+
 
 \newpage
 
@@ -851,6 +908,17 @@ levels(p2$category) <- c("Effortful Control","Positive Affectivity", "Negative A
 # p1 <- p1[order(-p1$experimental),]
 # p2 <- p2[order(-p2$experimental),]
 
+# p1$name <- factor(p1$name, levels = p1$name[order(p1$experimental)])
+# p2$name <- factor(p2$name, levels = p2$name[order(p2$experimental)])
+
+questions <- c("Did baby squirm when dressed or undressed?", "Did baby laugh when tossed around playfully?", "When tired, did baby show distress?", "Did baby cling to parent when intro to unknown adult?", "How often did baby enjoy being read to?", "How often did baby play with toy during last week?", "How often did baby move quickly to new objects?", "When put into bathwater how often did baby laugh?", "How often did baby whimper when put to bed?", "How often did baby cry if not attended to?", "How often did baby seem eager to get away after fed?", "How often did baby soothe after singing to?", "How often did baby squirm when placed on back?", "How often did baby laugh during peekaboo?", "How often does baby look up when phone rings?", "How often was baby angry when left in crib?", "How often did baby startle after body position change?", "How often did baby enjoy hearing sound of words?", "How often did baby look at pictures for more than 5 min?", "How often did baby get excited about a new place?", "How often did baby smile when given a toy?", "How often was baby tearful at end of exciting day?", "How often did baby protest being put in confining place?", "Did bab enjoy being held?", "How often did baby soothe when showing something to look at?", "How often did baby vocalize when hair was washed?", "How often did baby notice sound of airplane overhead?", "How often did baby refuse to go to unfamiliar person?", "How often did baby cry when not able to get your attention?", "How often did baby enjoy rhythmic activities?", "How often did baby stare at mobile/crib/picture?", "How often did baby become upset not getting what they want?", "How often did baby cling to parent around unfamiliar adults?", "How often did baby enjoy being rocked/hugged?", "How often was baby soothed by patting or rubbing part of babys body?", "How often did baby make sounds riding in a car?", "How often did baby squirm when placed in infant seat?")
+
+# rownames(p1) <- questions
+# rownames(p2) <- questions
+ p1$name <- questions
+ p2$name <- questions
+ 
+ 
 p1$name <- factor(p1$name, levels = p1$name[order(p1$experimental)])
 p2$name <- factor(p2$name, levels = p2$name[order(p2$experimental)])
 
@@ -863,7 +931,7 @@ p2a <- ggplot(p2[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y
 
 \newpage
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - Itemized Variables")}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - Itemized Variables")}
 
 p1a
 
@@ -871,7 +939,7 @@ p1a
 
 \newpage
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Age Adjusted Group vs. Pre-Term Group - Itemized Variables")}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Age Adjusted Group vs. Pre-Term Group - Itemized Variables")}
 
 p2a
 
