@@ -1,8 +1,19 @@
 ---
-title: "Leveraging Machine Learning to Study How Temperament Scores Predict Pre-Term Birth Status."
+title: Leveraging Machine Learning to Study How Temperament Scores Predict Pre-Term
+  Birth Status
 author: "Jennifer Mattera, Erich Seamon, XXX, Maria A. Gartstein"
-date: "10/25/2022"
-subtitle: 'The material contained herein is supplementary to the article named in the title and submitted to the journal, XXX.' 
+date: "11/30/2023"
+output:
+  pdf_document: default
+  html_document:
+    css: custom.css
+    code_folding: hide
+    highlight: textmate
+    theme: united
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: yes
 always_allow_html: yes
 header-includes:
 - \usepackage{pdflscape}
@@ -11,15 +22,8 @@ header-includes:
 - \usepackage{setspace}\doublespacing
 - \renewcommand{\figurename}{Figure S}
 - \renewcommand{\tablename}{Table S}
-output:
-  pdf_document: default
-  html_document:
-    css: custom.css
-    code_folding: hide
-    highlight: textmate
-    theme: united
-    toc: true
-    toc_float: true
+subtitle: The material contained herein is supplementary to the article named in the
+  title and submitted to the journal, Early Human Development
 params: null
 mainfont: serif
 ---
@@ -40,7 +44,7 @@ usePackage("webshot")
 loadfonts()
 ```
 
-This supplemental appendix provides machine learning analyses figures and tables in support of the following paper: "", submitted to XXXX.
+This supplemental appendix provides machine learning analyses, figures and tables in support of the following manuscript: "Leveraging Machine Learning to Study How Temperament Scores Predict Pre-Term Birth Status", submitted to Early Human Development.
 
 \newpage 
 <!-- \tableofcontents # adds table of contents -->
@@ -85,8 +89,8 @@ ibq_impute$ec <- rowMeans(ibq_impute[c(12,13,18,19,25,26,31,32,37,38,41,42)])
 ```
 \newpage
 
-```{r image-ref-for-in-text, echo = FALSE, message=FALSE, fig.align='center', fig.cap=paste("Quantitative methodology:  Four analysis types were considered. For each analysis type, 11 classification machine learning algorithms were used, resulting in a total of 44 model outputs."), out.width='0.75\\linewidth', fig.pos='H'}
-knitr::include_graphics("./images/Figure1.pdf")
+```{r figure1, echo = FALSE, message=FALSE, fig.align='center', fig.cap=paste("Modeling Methodology."), out.width='0.75\\linewidth', fig.pos='H'}
+knitr::include_graphics("Figure1.png")
 ```
 \newpage
 
@@ -105,42 +109,30 @@ colnames(Negative_Affect) <- "Negative Affect"
 Effortful_Control <- as.data.frame(questions[c(5,6,11,12,18,19,24,25,30,31,34,35)])
 colnames(Effortful_Control) <- "Effortful Control"
 
-
-
-```
-
-#
-\pagebreak
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
 kable(Surgency, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Surgency") %>%
-kable_styling(position = "left", font_size = 12) %>% row_spec(0,bold=TRUE) %>%
-  column_spec(1, width = "40em")
-
-```
-#
-\pagebreak
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
+kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
+  column_spec(1, width = "60em")
 
 kable(Negative_Affect, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Negative Affect") %>%
-kable_styling(position = "left", font_size = 12) %>% row_spec(0,bold=TRUE) %>%
-  column_spec(1, width = "40em")
-
-```
-#
-\pagebreak
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
+kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
+  column_spec(1, width = "60em")
 
 kable(Effortful_Control, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Effortful Control") %>%
-kable_styling(position = "left", font_size = 12) %>% row_spec(0,bold=TRUE) %>%
-  column_spec(1, width = "40em")
+kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
+  column_spec(1, width = "60em")
+
 
 ```
 
 
+\newpage
+\blandscape
+
+```{r table2, echo = FALSE, message=FALSE, fig.env='table', fig.topcaption=TRUE, fig.align='center', fig.cap=paste("Sample Descriptions."), out.width='1\\linewidth', fig.pos='H'}
+knitr::include_graphics("Table2.png")
+```
+
+\elandscape
 \newpage
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - Itemized Variables.")}
@@ -208,9 +200,10 @@ bwplot(results)
 
 
 ```
+
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Itemized Variables.")}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.align = "center", fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Itemized Variables.")}
 set.seed(9999)
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
@@ -317,7 +310,7 @@ auc_one_all <- txt2
 
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - Itemized Variables.")}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - Itemized Variables.")}
 set.seed(9999)
 library(haven)
 library(klaR)
@@ -381,9 +374,10 @@ bwplot(results)
 
 
 ```
+
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Itemized Variables.")}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Itemized Variables.")}
 set.seed(9999)
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
@@ -484,7 +478,7 @@ auc_two_all <- txt2
 \newpage
 
 
-```{r, echo=FALSE, warning = FALSE, results = 'hide', message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - Factorized Variables.")}
+```{r, echo=FALSE, warning = FALSE, results = 'hide', message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Chronological Age Group vs. Pre-Term Group - Factorized Variables.")}
 set.seed(9999)
 library(haven)
 library(klaR)
@@ -550,7 +544,7 @@ bwplot(results)
 
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Factorized Variables.")}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Factorized Variables.")}
 set.seed(9999)
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
@@ -648,9 +642,10 @@ results_one_trans <- results
 auc_one_trans <- txt2
 
 ```
+
 \newpage
 
-```{r, echo=FALSE, results = 'hide', warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - Factorized Variables.")}
+```{r, echo=FALSE, results = 'hide', warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Accuracy Estimates: Age Adjusted Group vs. Pre-Term Group - Factorized Variables.")}
 set.seed(9999)
 library(haven)
 library(klaR)
@@ -718,7 +713,7 @@ bwplot(results)
 
 \newpage
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Factorized Variables.")}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Factorized Variables.")}
 set.seed(9999)
 
 modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
@@ -816,6 +811,7 @@ results_two_trans <- results
 auc_two_trans <- txt2
 
 ```
+
 \newpage
 
 
@@ -879,6 +875,7 @@ p1a
 p2a
 
 ```
+
 \newpage
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - Itemized Variables")}
@@ -931,13 +928,19 @@ p2a <- ggplot(p2[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y
 
 \newpage
 
+\blandscape
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Chronological Age Group vs. Pre-Term Group - Itemized Variables")}
 
 p1a
 
 ```
 
+\elandscape
+
 \newpage
+
+\blandscape
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15.5, fig.height = 7.5, fig.cap=paste("Feature Importance: Age Adjusted Group vs. Pre-Term Group - Itemized Variables")}
 
@@ -945,9 +948,11 @@ p2a
 
 ```
 
+\elandscape
 
+\newpage
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, , fig.pos='H'}
 library(kableExtra)
 
 
@@ -989,34 +994,46 @@ rownames(trans_combined_final) <- modelnames
 
 #one_two_all <- cbind(one_all, two_all)
 
-```
-\newpage
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
-
 colnames(all_combined_final) <- c("accuracy", "kappa", "AUC", "accuracy", "kappa", "AUC")
 kable(round(all_combined_final, 3), caption = "Model Results: Itemized Variables") %>%
-kable_styling("striped", full_width = F,
-                position = "left", font_size = 12) %>%
+kable_styling( latex_options = "HOLD_position", "striped", full_width = F,
+                position = "left", font_size = 8) %>%
   add_header_above(c("models" = 1, "Chronological VS. Pre-Term: Itemized" = 3, "Adjusted Age VS. Pre-Term: Itemized" = 3))
-
-```
-
-\newpage
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
 
 colnames(trans_combined_final) <- c("accuracy", "kappa", "AUC", "accuracy", "kappa", "AUC")
 kable(round(trans_combined_final, 3), caption = "Model Results: Factorized Variables") %>%
-kable_styling("striped", full_width = F,
-                position = "left", font_size = 12) %>%
+kable_styling( latex_options = "HOLD_position", "striped", full_width = F,
+                position = "left", font_size = 8) %>%
   add_header_above(c("models" = 1, "Chronological VS. Pre-Term: Factorized" = 3, "Adjusted Age VS. Pre-Term: Factorized" = 3))
 
 ```
 
-\newpage
+<!-- \newpage -->
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+# colnames(all_combined_final) <- c("accuracy", "kappa", "AUC", "accuracy", "kappa", "AUC")
+# kable(round(all_combined_final, 3), caption = "Model Results: Itemized Variables") %>%
+# kable_styling( "striped", full_width = F,
+#                 position = "left", font_size = 8) %>%
+#   add_header_above(c("models" = 1, "Chronological VS. Pre-Term: Itemized" = 3, "Adjusted Age VS. Pre-Term: Itemized" = 3))
+
+```
+
+<!-- \newpage -->
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+# colnames(trans_combined_final) <- c("accuracy", "kappa", "AUC", "accuracy", "kappa", "AUC")
+# kable(round(trans_combined_final, 3), caption = "Model Results: Factorized Variables") %>%
+# kable_styling( "striped", full_width = F,
+#                 position = "left", font_size = 8) %>%
+#   add_header_above(c("models" = 1, "Chronological VS. Pre-Term: Factorized" = 3, "Adjusted Age VS. Pre-Term: Factorized" = 3))
+
+```
+
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("Model Accuracy Estimates: Chronological Age Group VS. Pre-Term Group - Itemized Variables.")}
 library(kableExtra)
@@ -1042,6 +1059,7 @@ names(AUC_long)[names(AUC_long) == 'variable'] <- 'Legend'
 
 ```
 
+\newpage
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("R2 Comparisons - Chronological Age Group VS Pre-Term Group, Factorized Variables VS. Itemized Variables.")}
 library(kableExtra)
@@ -1055,6 +1073,8 @@ R2plot_all
 
 ```
 
+\newpage
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("AUC Comparisons - Chronological Age Group VS Pre-Term Group, Factorized Variables VS. Itemized Variables.")}
 library(kableExtra)
 
@@ -1067,6 +1087,8 @@ AUCplot_all
 
 ```
 
+\newpage
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("R2 Comparisons - Age Adjusted Group VS Pre-Term Group, Factorized Variables VS. Itemized Variables.")}
 library(kableExtra)
 
@@ -1077,6 +1099,8 @@ scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(siz
 R2plot_trans
 
 ```
+
+\newpage
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.cap=paste("AUC Comparisons - Age Adjusted Group VS Pre-Term Group, Factorized Variables VS. Itemized Variables.")}
 library(kableExtra)
