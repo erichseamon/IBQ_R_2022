@@ -128,8 +128,45 @@ kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
 \newpage
 \blandscape
 
-```{r table2, echo = FALSE, message=FALSE, fig.env='table', fig.topcaption=TRUE, fig.align='center', fig.cap=paste("Sample Descriptions."), out.width='1\\linewidth', fig.pos='H'}
-knitr::include_graphics("Table2.png")
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+library(kableExtra)
+library(gridExtra)
+library(tibble)
+
+researchers <- c("Keim", "Leerkes", "Leerkes", "Rennels", "Rennels", "Rennels", "Narvaez", "Sanborn & Bisson", "Sanborn & Bisson", "Dunkel Schetter & Coussons-Read", "Dunkel Schetter & Coussons-Read", "Tarullo", "Schoppe-Sullivan", "Thomason", "Thomason", "Braungart-Rieker", "Lumeng", "Lenze", "Lenze", "Christian", "Christian", "Christian", "Christian", "Saxbe", "Saxbe",  "Stroud", "Stroud", "Rodriguez", "Anzman-Frasca")
+samplegrouping <- c("Sample 1", "Sample 1", "Sample 1", "Sample 1", "Sample 1", "Sample 2","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 2","Sample 2","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1","Sample 1")
+samplesize <- c("121", "Preterm:8", "Full-term:113", "Preterm:23", "Full-term:32", "Full-term:7","48", "Preterm:18", "Full-term:35", "Preterm:8", "Full-term:35", "31", "30", "Preterm:12",  "Full-term:8", "19", "15", "Preterm:4", "Full-term:9", "Preterm:2", "Full-term:4", "Preterm:2", "Full-term:7", "Preterm:1", "Full-term:10", "Preterm:2", "Full-term:4", "5", "2")
+infantage <- c("48.00-72.00", "24.43-62.71","51.71-71.71","27.57-46.14","25.00-56.57","26.00-28.14","48.00-67.00","10.29-60.71","6.14-63.14","25.14-57.00","51.29-63.71","44.20-56.20","34.00-51.00","24.07-33.27","28.27-30.38","21.19-32.09","17.14-24.00","27.00-30.00","52.00-69.00","8.00","8.00","12.00-16.00","12.00-24.00","28.51","13.52-33.09","9.61-11.97","3.44-4.03","24.00","10.57-16.43")
+adjustedinfantage <- c("40.00-64.00","21.00-58.00","","22.43-42.00","","","","4.29-56.71","","20.14-53.00","","","","13.39-30.13","","","","23.00-26.00","","4.00-4.29","","8.43-12.57","","25.36","","3.32-6.69","","","")
+gendermale <- c("52.1","50.0","46.9","47.8","56.3","42.9","56.3","61.1","53.8","62.5","53.1","61.3","50.0","75.0","25.0","57.9","46.7","75.0","55.6","50.0","50.0","50.0","25.0","0.00","70.0","50.0","50.0","60.0","100.0")
+race <- c("32.2","62.5","51.3","56.5","40.6","42.9","25.0","Not Collected", "Not Collected","87.5","51.4","22.6", "6.6","83.3","75.0","26.3","26.7","100.0","77.8","50.0","50.0","0.00","50.0","0.00","20.0","100.0","50.0","40.0","50.0")
+description <- c("Sample of preterm infants","Community sample of infants born to primiparous mothers","Community sample of infants born to primiparous mothers","Community sample of infants","Community sample of infants","Community sample of full-term infants","Community sample of full-term infants","Community sample of infants","Community sample of infants","Community sample of infants","Community sample of infants","Community sample of full-term, healthy infants","Community sample of infants born to primiparous mothers","Infants born to high-risk mothers from low socioeconomic backgrounds","Infants born to high-risk mothers from low socioeconomic backgrounds","Community sample of full-term infants without any developmental delays","Community sample of full-term, healthy infants","Infants born to mothers with prenatal depression","Infants born to mothers with prenatal depression","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Community sample of infants born to primiparous mothers","Community sample of infants born to primiparous mothers","Community sample of infants oversampled for mothers who smoked cigarettes during pregnancy","Community sample of infants oversampled for mothers who smoked cigarettes during pregnancy","Full-term infants born to primiparous mothers with elevated sociodemographic risk","Community sample of full-term infants born to primiparous mothers")
+
+df <- tibble(researchers, samplegrouping, samplesize, infantage, adjustedinfantage, gendermale, race, description)
+colnames(df) <- c("Researcher(s)","Sample Group",  "Sample Size (n)", "Chronological Infant Age (weeks)", "Adjusted Infant Age (weeks)", "Gender (% male)", "Race (% non-white)", "Sample Description")
+
+  kbl(df, caption = "Sample Descriptions") %>% 
+  collapse_rows(columns = c(1), valign = "middle",
+                latex_hline = "full") %>% kable_styling(position = "left", bootstrap_options = c("condensed"), font_size = 7) %>%
+  column_spec(8, width = "22em") %>%
+  column_spec(1, width = "15em") %>%
+  column_spec(c(2), width = "6em") %>% 
+  column_spec(c(3), width = "7em") %>%
+  column_spec(c(4), width = "8em") %>% 
+  column_spec(c(5), width = "6em") %>% 
+  column_spec(c(6:7), width = "5em") %>% row_spec(0, bold = TRUE)
+
+```
+
+\elandscape
+\newpage
+
+
+\blandscape
+
+```{r table2, echo = FALSE, message=FALSE, fig.env='table', fig.align='center', fig.cap=paste("Sample Descriptions."), out.width='1\\linewidth', fig.topcaption=TRUE, fig.pos='H'}
+#knitr::include_graphics("Table2.png")
 ```
 
 \elandscape
