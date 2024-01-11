@@ -1,8 +1,13 @@
 ---
-title: Leveraging Machine Learning to Study How Temperament Scores Predict Pre-Term
-  Birth Status
-author: "Jennifer Mattera, Erich Seamon, XXX, Maria A. Gartstein"
-date: "11/30/2023"
+title: Leveraging Machine Learning to Study How Temperament Scores Predict Pre-Term Birth Status
+author: 
+ - "Erich Seamon, Jennifer A. Mattera, Sarah A. Keim, Esther M. Leerkes, Jennifer L. Rennels," 
+ - "Andrea J. Kayl, Kirsty M. Kulhanek, Darcia Narvaez, Sarah M. Sanborn, Jennifer B. Grandits," 
+ - "Christine Dunkel Schetter, Mary Coussons-Read, Amanda R. Tarullo, Sarah J. Schoppe-Sullivan," 
+ - "Moriah E. Thomason, Julie M. Braungart-Rieker, Julie C. Lumeng, Shannon N. Lenze, "
+ - "Lisa M. Christian , Darby E. Saxbe, Laura R. Stroud, Christina M. Rodriguez, "
+ - "Stephanie Anzman-Frasca, Maria A. Gartstein" 
+date: "01/04/2024"
 output:
   pdf_document: default
   html_document:
@@ -103,17 +108,17 @@ library(gridExtra)
 questions <- c("Item 1: When being dressed or undressed during the last week, how often did the baby squirm and/or try to roll away?", "Item 2: When tossed around playfully how often did the baby laugh?", "Item 3: When tired, how often did your baby show distress?", "Item 4: When introduced to an unfamiliar adult, how often did the baby cling to a parent?", "Item 5: How often during the last week did the baby enjoy being read to?", "Item 6: How often during the last week did the baby play with one toy or object for 5-10 minutes?", "Item 7: How often during the week did your baby move quickly toward new objects?", "Item 8: When put into the bath water, how often did the baby laugh?", "Item 9: When it was time for bed or a nap and your baby did not want to go, how often did s/he whimper or sob?", "Item 10: After sleeping, how often did the baby cry if someone doesn’t come within a few minutes?", "Item 11: In the last week, while being fed in your lap, how often did the baby seem eager to get away as soon as the feeding was over?", "Item 12: When singing or talking to your baby, how often did s/he soothe immediately?", "Item 13: When placed on his/her back, how often did the baby squirm and/or turn body?", "Item 14: During a peekaboo game, how often did the baby laugh?", "Item 15: How often does the infant look up from playing when the telephone rings?", "Item 16: How often did the baby seem angry (crying and fussing) when you left her/him in the crib?", "Item 17: How often during the last week did the baby startle at a sudden change in body position (e.g., when moved suddenly)?", "Item 18: How often during the last week did the baby enjoy hearing the sound of words, as in nursery rhymes?", "Item 19: How often during the last week did the baby look at pictures in books and/or magazines for 5 minutes or longer at a time?", "Item 20: When visiting a new place, how often did your baby get excited about exploring new surroundings?", "Item 21: How often during the last week did the baby smile or laugh when given a toy?", "Item 22: At the end of an exciting day, how often did your baby become tearful?", "Item 23: How often during the last week did the baby protest being placed in a confining place (infant seat, play pen, car seat, etc.)?", "Item 24: When being held, in the last week, did your baby seem to enjoy him/herself?", "Item 25: When showing the baby something to look at, how often did s/he soothe immediately?", "Item 26: When hair was washed, how often did the baby vocalize?", "Item 27: How often did your baby notice the sound of an airplane passing overhead?", "Item 28: When introduced to an unfamiliar adult, how often did the baby refuse to go to the unfamiliar person?", "Item 29: When you were busy with another activity, and your baby was not able to get your attention, how often did s/he cry?", "Item 30: How often during the last week did the baby enjoy gentle rhythmic activities, such as rocking or swaying?", "Item 31: How often during the last week did the baby stare at a mobile, crib bumper or picture for 5 minutes or longer?", "Item 32: When the baby wanted something, how often did s/he become upset when s/he could not get what s/he wanted?", "Item 33: When in the presence of several unfamiliar adults, how often did the baby cling to a parent?", "Item 34: When rocked or hugged, in the last week, did your baby seem to enjoy him/herself?", "Item 35: When patting or gently rubbing some part of the baby’s body, how often did s/he soothe immediately?", "Item 36: How often did your baby make talking sounds when riding in a car?", "Item 37: When placed in an infant seat or car seat, how often did the baby squirm and turn body?")
 
 Surgency <- as.data.frame(questions[c(1,2,7,8,13,14,15,20,21,26,27,36,37)])
-colnames(Surgency) <- "Surgency"
+colnames(Surgency) <- "Positive Affectivity"
 Negative_Affect <- as.data.frame(questions[c(3,4,9,10,16,17,22,23,28,29,32,33)])
-colnames(Negative_Affect) <- "Negative Affect"
+colnames(Negative_Affect) <- "Negative Affectivity"
 Effortful_Control <- as.data.frame(questions[c(5,6,11,12,18,19,24,25,30,31,34,35)])
 colnames(Effortful_Control) <- "Effortful Control"
 
-kable(Surgency, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Surgency") %>%
+kable(Surgency, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Positive Affectivity") %>%
 kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
   column_spec(1, width = "60em")
 
-kable(Negative_Affect, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Negative Affect") %>%
+kable(Negative_Affect, caption = "Infant Behavior Questionnaire-Revised Very Short Form Items - Negative Affectivity") %>%
 kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
   column_spec(1, width = "60em")
 
@@ -128,7 +133,7 @@ kable_styling(position = "left", font_size = 8) %>% row_spec(0,bold=TRUE) %>%
 \newpage
 \blandscape
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 11, fig.height = 7.5, out.width= 11 }
 
 library(kableExtra)
 library(gridExtra)
@@ -141,12 +146,12 @@ infantage <- c("48.00-72.00", "24.43-62.71","51.71-71.71","27.57-46.14","25.00-5
 adjustedinfantage <- c("40.00-64.00","21.00-58.00","","22.43-42.00","","","","4.29-56.71","","20.14-53.00","","","","13.39-30.13","","","","23.00-26.00","","4.00-4.29","","8.43-12.57","","25.36","","3.32-6.69","","","")
 gendermale <- c("52.1","50.0","46.9","47.8","56.3","42.9","56.3","61.1","53.8","62.5","53.1","61.3","50.0","75.0","25.0","57.9","46.7","75.0","55.6","50.0","50.0","50.0","25.0","0.00","70.0","50.0","50.0","60.0","100.0")
 race <- c("32.2","62.5","51.3","56.5","40.6","42.9","25.0","Not Collected", "Not Collected","87.5","51.4","22.6", "6.6","83.3","75.0","26.3","26.7","100.0","77.8","50.0","50.0","0.00","50.0","0.00","20.0","100.0","50.0","40.0","50.0")
-description <- c("Sample of preterm infants","Community sample of infants born to primiparous mothers","Community sample of infants born to primiparous mothers","Community sample of infants","Community sample of infants","Community sample of full-term infants","Community sample of full-term infants","Community sample of infants","Community sample of infants","Community sample of infants","Community sample of infants","Community sample of full-term, healthy infants","Community sample of infants born to primiparous mothers","Infants born to high-risk mothers from low socioeconomic backgrounds","Infants born to high-risk mothers from low socioeconomic backgrounds","Community sample of full-term infants without any developmental delays","Community sample of full-term, healthy infants","Infants born to mothers with prenatal depression","Infants born to mothers with prenatal depression","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Community sample of infants born to primiparous mothers","Community sample of infants born to primiparous mothers","Community sample of infants oversampled for mothers who smoked cigarettes during pregnancy","Community sample of infants oversampled for mothers who smoked cigarettes during pregnancy","Full-term infants born to primiparous mothers with elevated sociodemographic risk","Community sample of full-term infants born to primiparous mothers")
+description <- c("Sample of preterm infants recruited in NICU","Community sample of infants born to primiparous mothers","Community sample of infants born to primiparous mothers","Community sample of infants","Community sample of infants","Community sample of full-term infants","Community sample of full-term infants","Community sample of infants","Community sample of infants","Community sample of infants","Community sample of infants","Community sample of full-term, healthy infants","Community sample of infants born to primiparous mothers","Infants born to high-risk mothers from low socioeconomic backgrounds","Infants born to high-risk mothers from low socioeconomic backgrounds","Community sample of full-term infants without any developmental delays","Community sample of full-term, healthy infants","Infants born to mothers with prenatal depression","Infants born to mothers with prenatal depression","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Sample of infants born to mothers with low-risk pregnancy (e.g., no major health problems, singleton pregnancy)","Community sample of infants born to primiparous mothers","Community sample of infants born to primiparous mothers","Community sample of infants oversampled for mothers who smoked cigarettes during pregnancy","Community sample of infants oversampled for mothers who smoked cigarettes during pregnancy","Full-term infants born to primiparous mothers with elevated sociodemographic risk","Community sample of full-term infants born to primiparous mothers")
 
 df <- tibble(researchers, samplegrouping, samplesize, infantage, adjustedinfantage, gendermale, race, description)
 colnames(df) <- c("Researcher(s)","Sample Group",  "Sample Size (n)", "Chronological Infant Age (weeks)", "Adjusted Infant Age (weeks)", "Gender (% male)", "Race (% non-white)", "Sample Description")
 
-  kbl(df, caption = "Sample Descriptions") %>% 
+  kbl(df, caption = "Sample descriptions. Sample sizes were determined by our ability to match infants born preterm and comparison babies based on infant age (chronological and adjusted for prematurity).") %>% 
   collapse_rows(columns = c(1), valign = "middle",
                 latex_hline = "full") %>% kable_styling(position = "left", bootstrap_options = c("condensed"), font_size = 7) %>%
   column_spec(8, width = "22em") %>%
@@ -161,6 +166,50 @@ colnames(df) <- c("Researcher(s)","Sample Group",  "Sample Size (n)", "Chronolog
 
 \elandscape
 \newpage
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+library(kableExtra)
+library(gridExtra)
+library(tibble)
+
+items <- c("Surgecy", "Item 1","Item 2","Item 7","Item 8","Item 13","Item 14","Item 15","Item 20","Item 21","Item 26","Item 27","Item 36","Item 37", "Negative Affect", "Item 3","Item 4","Item 9","Item 10","Item 16","Item 17","Item 22","Item 23","Item 28","Item 29","Item 32","Item 33", "Effortful Control",  "Item 5","Item 6","Item 11","Item 12","Item 18","Item 19","Item 24","Item 25","Item 30","Item 31","Item 34","Item 35")
+
+mean_preterm <- c(5.25,4.84,6.23,5.69,4.93,5.58,6.03,5.45,5.65,5.82,4.36,3.81,5.66,4.14,4.31,4.93,4.48,4.29,4.19,4.25,3.53,3.10,4.07,4.07,4.72,5.28,4.65,5.29,5.46,4.95,4.05,5.62,5.96,4.31,6.07,5.19,5.78,3.54,6.35,5.71)
+
+sd_preterm <- c(0.93,1.69,1.00,1.49,2.01,1.40,1.37,1.75,1.44,1.31,2.04,2.32,1.50,1.84,1.13,1.58,2.05,1.86,1.94,1.84,1.91,1.66,1.73,2.22,1.80,1.54,2.10,0.72,1.50,1.71,1.97,1.12,1.19,1.86,1.10,1.34,1.34,1.94,0.91,1.23)
+
+
+range_preterm <- c("2.17-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","3.42-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00")
+
+mean_chron <- c(5.29,4.98,6.25,5.76,5.19,5.43,6.03,5.43,5.54,5.84,4.49,4.03,5.40,4.06,4.08,4.57,4.20,4.33,4.13,4.23,3.29,2.85,3.86,3.81,4.32,5.05,4.31,5.24,5.51,4.96,3.71,5.54,5.86,4.18,6.14,5.32,5.59,3.28,6.17,5.55)
+
+sd_chron <- c(0.83,1.59,1.15,1.44,1.93,1.51,1.36,1.56,1.44,1.21,1.91,2.06,1.54,1.73,1.02,1.60,1.91,1.85,1.92,1.73,1.77,1.55,1.66,1.96,1.58,1.50,1.88,0.77,1.37,1.62,2.02,1.25,1.17,1.77,1.00,1.17,1.48,1.89,1.02,1.29)
+
+range_chron <- c("2.00-6.73","1.00-7.00","2.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.75-6.33","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","3.08-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","3.00-7.00","2.00-7.00","2.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00")
+
+mean_adjust <- c(5.07,4.79,6.09,5.65,4.74,5.62,5.83,5.02,5.81,5.72,4.03,3.27,5.30,4.06,3.89,4.49,3.76,3.98,4.10,3.88,3.18,2.74,3.87,3.45,4.29,4.79,4.14,5.24,5.50,4.79,3.71,5.50,5.80,4.16,6.18,5.26,5.77,3.30,6.35,5.46)
+
+sd_adjust <- c(0.84,1.65,1.04,1.35,2.11,1.20,1.39,1.64,1.32,1.21,1.97,2.05,1.51,1.70,0.94,1.50,1.84,1.72,1.83,1.68,1.53,1.37,1.57,2.02,1.62,1.44,2.05,0.70,1.42,1.61,2.05,1.08,1.26,1.85,0.91,1.18,1.30,1.83,0.83,1.29)
+
+range_adjust <- c("1.67-6.92","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.45-6.42","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00","2.92-6.90","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00","1.00-7.00","3.00-7.00","1.00-7.00","1.00-7.00","1.00-7.00","2.00-7.00","1.00-7.00")
+
+
+
+
+
+
+
+df <- tibble(items, mean_preterm, sd_preterm, range_preterm, mean_chron, sd_chron, range_chron, mean_adjust, sd_adjust, range_adjust)
+colnames(df) <- c("Factors/Items", "Mean", "SD", "Range", "Mean", "SD", "Range", "Mean", "SD", "Range")
+
+  kbl(df, caption = "Descriptive statistics for the temperament factors and items by term status.") %>%
+  add_header_above(c(" ", "Preterm" = 3, "Chronological" = 3, "Age Adjusted"= 3)) %>% kable_styling(position = "left", bootstrap_options = c("condensed"), font_size = 7) %>%
+  column_spec(c(2:10), width = "4em") %>%
+  column_spec(c(1), width = "6em") %>% row_spec(0, bold = TRUE)
+```
+
+
 
 
 \blandscape
@@ -243,7 +292,7 @@ bwplot(results)
 ```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.align = "center", fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Itemized Variables.")}
 set.seed(9999)
 
-modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
+modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50",  "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
 txt <- NULL
 txt2 <- NULL
@@ -417,7 +466,7 @@ bwplot(results)
 ```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Itemized Variables.")}
 set.seed(9999)
 
-modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
+modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50",  "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
 txt <- NULL
 txt2 <- NULL
@@ -584,7 +633,7 @@ bwplot(results)
 ```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Chronological Age Group vs. Pre-Term Group - Factorized Variables.")}
 set.seed(9999)
 
-modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
+modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50",  "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
 txt <- NULL
 txt2 <- NULL
@@ -753,7 +802,7 @@ bwplot(results)
 ```{r, echo=FALSE, warning = FALSE, message = FALSE, error=FALSE, fig.width = 11, fig.height = 7.5, fig.cap=paste("Receiver Operator Curve: Age Adjusted Group vs. Pre-Term Group - Factorized Variables.")}
 set.seed(9999)
 
-modellist <- c("lda", "glm", "svm", "knn", "nb", "cart",  "treebag", "rf", "gbm", "adabag")
+modellist <- c("lda", "glm", "svm", "knn", "nb", "cart", "c50",  "treebag", "rf", "gbm", "adabag")
 leng <- 1:length(modellist)  
 txt <- NULL
 txt2 <- NULL
@@ -869,12 +918,12 @@ p2 <- varImp(fit_rf_control_two_trans,scale = TRUE)[["importance"]]
 p2$Overall <- p2$control_two / sum(p2$control_two)
 p1$name <- rownames(p2)
 
-p1$name <- c("Effortful Control","Positive Affectivity", "Negative Affectivity")
+p1$name <- c("Effortful Control","Negative Affectivity", "Positive Affectivity")
 # p1name <- gsub("^.*?_","",p1$name)
 # p1name <- gsub("^.*?_","",p1name)
 p1$category <- p1$name
 # 
-p2$name <- c("Effortful Control","Positive Affectivity", "Negative Affectivity")
+p2$name <- c("Effortful Control","Negative Affectivity", "Positive Affectivity")
 
 # p2name <- gsub("^.*?_","",p2$name)
 # p2name <- gsub("^.*?_","",p2name)
@@ -893,8 +942,8 @@ p2$name <- factor(p2$name, levels = p2$name[order(p2$experimental)])
 p1[3,3] <- .01
 p2[3,3] <- .006
 
-p1a <- ggplot(p1[1:3,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity") + theme_classic(base_size = 24) + xlab("Importance %") + ylab("Category")
-p2a <- ggplot(p2[1:3,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity") + theme_classic(base_size = 24) + xlab("Importance %") + ylab("Category")
+p1a <- ggplot(p1[1:3,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity") + theme_classic(base_size = 24) + xlab("Importance %") + ylab("Category") + xlim(0,.8)
+p2a <- ggplot(p2[1:3,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity") + theme_classic(base_size = 24) + xlab("Importance %") + ylab("Category") + xlim(0,.8)
 
 
 ```
@@ -932,12 +981,12 @@ p2$name <- rownames(p2)
 p1name <- gsub("^.*?_","",p1$name)
 p1name <- gsub("^.*?_","",p1name)
 p1$category <- as.factor(p1name)
-levels(p1$category) <- c("Effortful Control","Positive Affectivity", "Negative Affectivity" )
+levels(p1$category) <- c("Effortful Control","Negative Affectivity", "Positive Affectivity" )
 
 p2name <- gsub("^.*?_","",p2$name)
 p2name <- gsub("^.*?_","",p2name)
 p2$category <- as.factor(p2name)
-levels(p2$category) <- c("Effortful Control","Positive Affectivity", "Negative Affectivity" )
+levels(p2$category) <- c("Effortful Control","Negative Affectivity", "Positive Affectivity" )
 
 # p1 <- p1[order(-p1$experimental),]
 # p2 <- p2[order(-p2$experimental),]
@@ -956,8 +1005,8 @@ questions <- c("Did baby squirm when dressed or undressed?", "Did baby laugh whe
 p1$name <- factor(p1$name, levels = p1$name[order(p1$experimental)])
 p2$name <- factor(p2$name, levels = p2$name[order(p2$experimental)])
 
-p1a <- ggplot(p1[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity")  + theme_classic(base_size = 24)+ xlab("Importance %") + ylab("Questions")
-p2a <- ggplot(p2[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity")  + theme_classic(base_size = 24)+ xlab("Importance %") + ylab("Questions")
+p1a <- ggplot(p1[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity")  + theme_classic(base_size = 24)+ xlab("Importance %") + ylab("Questions") + xlim(0,.05)
+p2a <- ggplot(p2[1:20,], aes(x=Overall, y=name, fill=category)) + geom_bar(aes(y=name), stat="identity")  + theme_classic(base_size = 24)+ xlab("Importance %") + ylab("Questions") + xlim(0,.05)
 #p2a <- ggplot(p2) + ggtitle("Random Forest Control Two vs. Experimental", subtitle = "Itemized Variables")   + theme_classic(base_size = 17)
 
 
@@ -1102,7 +1151,7 @@ names(AUC_long)[names(AUC_long) == 'variable'] <- 'Legend'
 library(kableExtra)
 
 R2plot_all <- ggplot(R2_long[c(1:11, 23:33),],            
-               aes(x = modelname,
+               aes(x = factor(modelname, levels = c("lda","glm","svm","knn","nb","cart","c5.0","bagging","rf","gbm","adabag")),
                    y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
 scale_color_manual(values=c('lightgreen','darkgreen'))+theme(text=element_text(size=36))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=36))+labs(y= "R2 Value", x = "Model Type")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + 
     theme(legend.key.width = unit(5, "line"))
@@ -1116,7 +1165,7 @@ R2plot_all
 library(kableExtra)
 
 AUCplot_all <- ggplot(AUC_long[c(1:11, 23:33),],            
-               aes(x = modelname,
+               aes(x = factor(modelname, levels = c("lda","glm","svm","knn","nb","cart","c5.0","bagging","rf","gbm","adabag")),
                    y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
 scale_color_manual(values=c('lightgreen','darkgreen'))+theme(text=element_text(size=36))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=36))+labs(y= "AUC Value", x = "Model Type")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + 
     theme(legend.key.width = unit(5, "line"))
@@ -1130,7 +1179,7 @@ AUCplot_all
 library(kableExtra)
 
 R2plot_trans <- ggplot(R2_long[c(12:22, 34:44),],            
-               aes(x = modelname,
+               aes(x = factor(modelname, levels = c("lda","glm","svm","knn","nb","cart","c5.0","bagging","rf","gbm","adabag")),
                    y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
 scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(size=36))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=36))+labs(y= "R2 Value", x = "Model Type")+ theme(legend.position="bottom", legend.box="vertical") + guides(color = guide_legend(nrow = 2)) + theme(legend.key.width = unit(5, "line"))
 R2plot_trans
@@ -1143,7 +1192,7 @@ R2plot_trans
 library(kableExtra)
 
 AUCplot_trans <- ggplot(AUC_long[c(12:22, 34:44),],            
-               aes(x = modelname,
+               aes(x = factor(modelname, levels = c("lda","glm","svm","knn","nb","cart","c5.0","bagging","rf","gbm","adabag")),
                    y = value, group = Legend)) +  geom_line(aes(linetype=Legend, color=Legend), lwd=1.75) + theme_bw() + ylim(.2,.75) +
 scale_color_manual(values=c('lightblue','darkblue'))+theme(text=element_text(size=36))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=36), legend.position="bottom", legend.box="vertical")+labs(y= "AUC Value", x = "Model Type") + guides(color = guide_legend(nrow = 2)) + theme(legend.key.width = unit(5, "line"))
 AUCplot_trans
